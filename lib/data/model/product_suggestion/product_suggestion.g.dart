@@ -11,7 +11,7 @@ _$ProductSuggestionImpl _$$ProductSuggestionImplFromJson(
 ) => _$ProductSuggestionImpl(
   type: json['type'] as String,
   message: json['message'] as String,
-  threadId: json['thread_id'] as String,
+  threadId: json['thread_id'] as String?,
   quiz: json['quiz'] == null
       ? null
       : Quiz.fromJson(json['quiz'] as Map<String, dynamic>),

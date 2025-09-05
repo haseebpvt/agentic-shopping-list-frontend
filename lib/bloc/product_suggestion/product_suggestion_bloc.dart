@@ -26,9 +26,11 @@ class ProductSuggestionBloc extends Bloc<ProductSuggestionEvent, ProductSuggesti
       await emit.forEach<ProductSuggestion>(
         apiService.getProductSuggestion(event.userId, event.imageFile),
         onData: (data) {
-          print("📡 Received stream data: ${data.type} - ${data.message}");
+          print("📡 Received stream data: type=${data.type}, message=${data.message}, threadId=${data.threadId}");
+          print("📡 Quiz data: ${data.quiz}");
+          print("📡 Suggestion data: ${data.suggestion}");
           
-          if (data.type == "quiz_interrupt") {
+          if (data.type == "quiz_interrupt" || data.type == "quiz") {
             // Quiz is required
             final quizQuestions = data.quiz?.quiz?.map((item) {
               return quiz_widget.QuizQuestion(
@@ -38,19 +40,28 @@ class ProductSuggestionBloc extends Bloc<ProductSuggestionEvent, ProductSuggesti
               );
             }).toList() ?? [];
 
+            print("📡 Quiz questions parsed: ${quizQuestions.length} questions");
+            
+            if (quizQuestions.isEmpty) {
+              print("⚠️ No quiz questions found in data: ${data.quiz}");
+              return ProductSuggestionLoading(message: "Processing quiz data...");
+            }
+
             return ProductSuggestionQuizRequired(
               quizQuestions: quizQuestions,
-              threadId: data.threadId,
+              threadId: data.threadId ?? "",
               message: data.message,
             );
           } else if (data.type == "suggestion" && data.suggestion?.products != null) {
             // Direct suggestions without quiz
+            print("📡 Found ${data.suggestion!.products!.length} products");
             return ProductSuggestionSuccess(
               products: data.suggestion!.products!,
               message: data.message,
             );
           } else {
             // Stream update - show the message in loading state
+            print("📡 Stream update: ${data.message}");
             return ProductSuggestionLoading(message: data.message);
           }
         },

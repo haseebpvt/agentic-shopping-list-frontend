@@ -108,12 +108,20 @@ class ApiServiceImpl implements ApiService {
             try {
               print("🔄 Processing JSON: $jsonStr");
               final json = jsonDecode(jsonStr);
+              print("🔄 Decoded JSON: $json");
               final result = ProductSuggestion.fromJson(json);
-              print("✅ Successfully parsed: ${result.type} - ${result.message}");
+              print("✅ Successfully parsed: type=${result.type}, message=${result.message}, threadId=${result.threadId}");
+              if (result.quiz != null) {
+                print("✅ Quiz data present: ${result.quiz!.quiz?.length ?? 0} questions");
+              }
+              if (result.suggestion != null) {
+                print("✅ Suggestion data present: ${result.suggestion!.products?.length ?? 0} products");
+              }
               yield result;
             } catch (parseError) {
               print("❌ Error parsing JSON: $parseError");
               print("❌ JSON content: $jsonStr");
+              // Continue processing instead of stopping the stream
             }
           } else {
             // No complete JSON object found, wait for more data
@@ -130,8 +138,9 @@ class ApiServiceImpl implements ApiService {
       try {
         print("🔄 Processing final buffer: ${buffer.trim()}");
         final json = jsonDecode(buffer.trim());
+        print("🔄 Final decoded JSON: $json");
         final result = ProductSuggestion.fromJson(json);
-        print("✅ Successfully parsed final: ${result.type} - ${result.message}");
+        print("✅ Successfully parsed final: type=${result.type}, message=${result.message}, threadId=${result.threadId}");
         yield result;
       } catch (bufferError) {
         print("❌ Error parsing final buffer: $bufferError");

@@ -24,7 +24,7 @@ mixin _$ProductSuggestion {
   String get type => throw _privateConstructorUsedError;
   String get message => throw _privateConstructorUsedError;
   @JsonKey(name: 'thread_id')
-  String get threadId => throw _privateConstructorUsedError;
+  String? get threadId => throw _privateConstructorUsedError;
   Quiz? get quiz => throw _privateConstructorUsedError;
   Suggestion? get suggestion => throw _privateConstructorUsedError;
 
@@ -48,7 +48,7 @@ abstract class $ProductSuggestionCopyWith<$Res> {
   $Res call({
     String type,
     String message,
-    @JsonKey(name: 'thread_id') String threadId,
+    @JsonKey(name: 'thread_id') String? threadId,
     Quiz? quiz,
     Suggestion? suggestion,
   });
@@ -74,7 +74,7 @@ class _$ProductSuggestionCopyWithImpl<$Res, $Val extends ProductSuggestion>
   $Res call({
     Object? type = null,
     Object? message = null,
-    Object? threadId = null,
+    Object? threadId = freezed,
     Object? quiz = freezed,
     Object? suggestion = freezed,
   }) {
@@ -88,10 +88,10 @@ class _$ProductSuggestionCopyWithImpl<$Res, $Val extends ProductSuggestion>
                 ? _value.message
                 : message // ignore: cast_nullable_to_non_nullable
                       as String,
-            threadId: null == threadId
+            threadId: freezed == threadId
                 ? _value.threadId
                 : threadId // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as String?,
             quiz: freezed == quiz
                 ? _value.quiz
                 : quiz // ignore: cast_nullable_to_non_nullable
@@ -146,7 +146,7 @@ abstract class _$$ProductSuggestionImplCopyWith<$Res>
   $Res call({
     String type,
     String message,
-    @JsonKey(name: 'thread_id') String threadId,
+    @JsonKey(name: 'thread_id') String? threadId,
     Quiz? quiz,
     Suggestion? suggestion,
   });
@@ -173,7 +173,7 @@ class __$$ProductSuggestionImplCopyWithImpl<$Res>
   $Res call({
     Object? type = null,
     Object? message = null,
-    Object? threadId = null,
+    Object? threadId = freezed,
     Object? quiz = freezed,
     Object? suggestion = freezed,
   }) {
@@ -187,10 +187,10 @@ class __$$ProductSuggestionImplCopyWithImpl<$Res>
             ? _value.message
             : message // ignore: cast_nullable_to_non_nullable
                   as String,
-        threadId: null == threadId
+        threadId: freezed == threadId
             ? _value.threadId
             : threadId // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as String?,
         quiz: freezed == quiz
             ? _value.quiz
             : quiz // ignore: cast_nullable_to_non_nullable
@@ -210,7 +210,7 @@ class _$ProductSuggestionImpl implements _ProductSuggestion {
   const _$ProductSuggestionImpl({
     required this.type,
     required this.message,
-    @JsonKey(name: 'thread_id') required this.threadId,
+    @JsonKey(name: 'thread_id') this.threadId,
     this.quiz,
     this.suggestion,
   });
@@ -224,7 +224,7 @@ class _$ProductSuggestionImpl implements _ProductSuggestion {
   final String message;
   @override
   @JsonKey(name: 'thread_id')
-  final String threadId;
+  final String? threadId;
   @override
   final Quiz? quiz;
   @override
@@ -275,7 +275,7 @@ abstract class _ProductSuggestion implements ProductSuggestion {
   const factory _ProductSuggestion({
     required final String type,
     required final String message,
-    @JsonKey(name: 'thread_id') required final String threadId,
+    @JsonKey(name: 'thread_id') final String? threadId,
     final Quiz? quiz,
     final Suggestion? suggestion,
   }) = _$ProductSuggestionImpl;
@@ -289,7 +289,7 @@ abstract class _ProductSuggestion implements ProductSuggestion {
   String get message;
   @override
   @JsonKey(name: 'thread_id')
-  String get threadId;
+  String? get threadId;
   @override
   Quiz? get quiz;
   @override

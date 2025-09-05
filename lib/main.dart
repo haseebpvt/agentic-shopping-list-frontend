@@ -252,6 +252,8 @@ class _CameraScreenState extends State<CameraScreen> {
               return "${item.question}: ${item.selectedAnswer}";
             }).toList();
 
+            print("📝 Submitting quiz with ${questionAndAnswers.length} answers");
+            print("📝 Thread ID: ${state.threadId}");
             context.read<ProductSuggestionBloc>().add(
                   SubmitQuizEvent(
                     quizRequest: QuizResumeRequest(

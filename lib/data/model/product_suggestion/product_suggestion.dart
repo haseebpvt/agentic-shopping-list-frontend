@@ -8,7 +8,7 @@ class ProductSuggestion with _$ProductSuggestion {
   const factory ProductSuggestion({
     required String type,
     required String message,
-    @JsonKey(name: 'thread_id') required String threadId,
+    @JsonKey(name: 'thread_id') String? threadId,
     Quiz? quiz,
     Suggestion? suggestion,
   }) = _ProductSuggestion;
