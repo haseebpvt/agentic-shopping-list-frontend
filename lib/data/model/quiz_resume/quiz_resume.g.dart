@@ -6,6 +6,22 @@ part of 'quiz_resume.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+_$QuizResumeRequestImpl _$$QuizResumeRequestImplFromJson(
+  Map<String, dynamic> json,
+) => _$QuizResumeRequestImpl(
+  threadId: json['thread_id'] as String,
+  questionAndAnswers: (json['question_and_answers'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
+);
+
+Map<String, dynamic> _$$QuizResumeRequestImplToJson(
+  _$QuizResumeRequestImpl instance,
+) => <String, dynamic>{
+  'thread_id': instance.threadId,
+  'question_and_answers': instance.questionAndAnswers,
+};
+
 _$QuizResumeResponseImpl _$$QuizResumeResponseImplFromJson(
   Map<String, dynamic> json,
 ) => _$QuizResumeResponseImpl(
