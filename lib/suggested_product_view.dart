@@ -123,25 +123,6 @@ class SuggestedProductView extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton.icon(
-                  onPressed: () {
-                    // TODO: Add to shopping list functionality
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${product.name} added to shopping list!'),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.add_shopping_cart),
-                  label: const Text("Add to List"),
-                ),
-              ],
-            ),
           ],
         ),
       ),
