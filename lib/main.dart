@@ -33,7 +33,7 @@ class _CameraAppState extends State<CameraApp> {
   @override
   void initState() {
     super.initState();
-    controller = CameraController(_cameras[0], ResolutionPreset.max);
+    controller = CameraController(_cameras[0], ResolutionPreset.high);
     controller
         .initialize()
         .then((_) {
@@ -98,7 +98,7 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void initState() {
     super.initState();
-    controller = CameraController(_cameras[0], ResolutionPreset.max);
+    controller = CameraController(_cameras[0], ResolutionPreset.high);
     controller
         .initialize()
         .then((_) {
@@ -164,16 +164,23 @@ class _CameraScreenState extends State<CameraScreen> {
                         ? null
                         : () async {
                             print("📸 Camera button pressed");
+                            
+                            // Show compression loading state
+                            context.read<ProductSuggestionBloc>().add(const ResetEvent());
+                            await Future.delayed(const Duration(milliseconds: 100));
+                            
                             final file = await controller.takePicture();
                             print("📸 Picture taken: ${file.path}");
                             if (!mounted) return;
                             print("📸 Dispatching GetProductSuggestionEvent");
-                            context
-                                .read<ProductSuggestionBloc>()
-                                .add(GetProductSuggestionEvent(
-                                  userId: "8",
-                                  imageFile: file,
-                                ));
+                            if (mounted) {
+                              context
+                                  .read<ProductSuggestionBloc>()
+                                  .add(GetProductSuggestionEvent(
+                                    userId: "8",
+                                    imageFile: file,
+                                  ));
+                            }
                           },
                     icon: const Icon(Icons.camera),
                   ),

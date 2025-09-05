@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:advanced_shopping_list_frontend/data/model/product_suggestion/product_suggestion.dart';
 import 'package:advanced_shopping_list_frontend/data/model/quiz_resume/quiz_resume.dart';
+import 'package:advanced_shopping_list_frontend/utils/image_compression.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 
@@ -21,10 +23,22 @@ class ApiServiceImpl implements ApiService {
     String userId,
     XFile file,
   ) async* {
-    String fileName = file.path.split("/").last;
+    print("🔄 Starting image compression...");
+    
+    // Compress the image before upload
+    File compressedFile;
+    try {
+      compressedFile = await ImageCompression.compressImage(file);
+    } catch (e) {
+      print("❌ Image compression failed: $e");
+      // Fall back to original file if compression fails
+      compressedFile = File(file.path);
+    }
+    
+    String fileName = compressedFile.path.split("/").last;
     FormData formData = FormData.fromMap({
       "user_id": userId,
-      "file": await MultipartFile.fromFile(file.path, filename: fileName),
+      "file": await MultipartFile.fromFile(compressedFile.path, filename: fileName),
     });
 
     print("🌐 Making request to: ${dio.options.baseUrl}/get_product_recommendation");
@@ -145,6 +159,16 @@ class ApiServiceImpl implements ApiService {
       } catch (bufferError) {
         print("❌ Error parsing final buffer: $bufferError");
         print("❌ Buffer content: $buffer");
+      }
+    }
+    
+    // Clean up compressed file if it's different from original
+    if (compressedFile.path != file.path) {
+      try {
+        await compressedFile.delete();
+        print("🗑️ Cleaned up compressed file: ${compressedFile.path}");
+      } catch (e) {
+        print("⚠️ Failed to delete compressed file: $e");
       }
     }
   }
