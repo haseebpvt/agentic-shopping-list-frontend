@@ -1,4 +1,5 @@
 import 'package:advanced_shopping_list_frontend/data/model/quiz_resume/quiz_resume.dart';
+import 'package:advanced_shopping_list_frontend/suggested_product_view.dart';
 import 'package:animated_quiz_widget/quiz_view.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
@@ -31,7 +32,7 @@ class _CameraAppState extends State<CameraApp> {
   bool _showQuiz = false;
   List<QuizQuestion>? quizQuestionAnswerList = [];
   String threadId = "";
-
+  QuizResumeResponse? quizResumeResponse;
 
   @override
   void initState() {
@@ -140,17 +141,29 @@ class _CameraAppState extends State<CameraApp> {
                     return "${data.question}: ${data.selectedAnswer}";
                   }).toList();
 
-                  apiService.resumeQuiz(
-                    QuizResumeRequest(
-                      threadId: threadId,
-                      questionAndAnswers: questionAndAnswers,
-                    ),
-                  ).then((data) {
-
-                  });
+                  apiService
+                      .resumeQuiz(
+                        QuizResumeRequest(
+                          threadId: threadId,
+                          questionAndAnswers: questionAndAnswers,
+                        ),
+                      )
+                      .then((questionAndAnswerData) {
+                        setState(() {
+                          quizResumeResponse = questionAndAnswerData;
+                        });
+                      });
                 },
               ),
             ),
+            // ListView.builder(
+            //   itemCount: quizResumeResponse?.data.products.length,
+            //   itemBuilder: (context, index) {
+            //
+            //
+            //     // return SuggestedProductView(product: )
+            //   },
+            // ),
           ],
         ),
       ),
