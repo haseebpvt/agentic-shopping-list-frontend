@@ -5,7 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 
 abstract class ApiService {
-  Future<ProductSuggestion> getProductSuggestion(String userId, XFile file);
+  Stream<ProductSuggestion> getProductSuggestion(String userId, XFile file);
 }
 
 class ApiServiceImpl implements ApiService {
@@ -14,10 +14,10 @@ class ApiServiceImpl implements ApiService {
   const ApiServiceImpl(this.dio);
 
   @override
-  Future<ProductSuggestion> getProductSuggestion(
+  Stream<ProductSuggestion> getProductSuggestion(
     String userId,
     XFile file,
-  ) async {
+  ) async* {
     String fileName = file.path.split("/").last;
     FormData formData = FormData.fromMap({
       "user_id": userId,
@@ -29,8 +29,6 @@ class ApiServiceImpl implements ApiService {
       data: formData,
       options: Options(responseType: ResponseType.stream),
     );
-
-    ProductSuggestion? lastResult;
     
     await for (final bytes in response.data!.stream) {
       try {
@@ -39,17 +37,11 @@ class ApiServiceImpl implements ApiService {
 
         final json = jsonDecode(chunk);
         final result = ProductSuggestion.fromJson(json);
-        
-        lastResult = result;
+
+        yield result;
       } catch (e) {
         print("❌ Error processing chunk: $e");
       }
     }
-    
-    if (lastResult == null) {
-      throw Exception("No valid ProductSuggestion received from stream");
-    }
-    
-    return lastResult;
   }
 }

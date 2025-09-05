@@ -25,6 +25,8 @@ class CameraApp extends StatefulWidget {
 class _CameraAppState extends State<CameraApp> {
   late CameraController controller;
 
+  String _text = "-";
+
   @override
   void initState() {
     super.initState();
@@ -79,26 +81,20 @@ class _CameraAppState extends State<CameraApp> {
             ),
             IconButton(
               onPressed: () async {
-                try {
-                  print("📸 Taking picture...");
-                  final file = await controller.takePicture();
-                  print("✅ Picture taken: ${file.path}");
+                final file = await controller.takePicture();
+                final apiService = ApiServiceImpl(
+                  Dio(BaseOptions(baseUrl: "http://10.0.2.2:8000")),
+                );
 
-                  final options = BaseOptions(baseUrl: "http://10.0.2.2:8000");
-                  final apiService = ApiServiceImpl(Dio(options));
-
-                  print("🔄 Calling getProductSuggestion...");
-                  final result = await apiService.getProductSuggestion(
-                    "8",
-                    file,
-                  );
-                  print("🎉 Final result received: ${result.type}");
-                } catch (e) {
-                  print("💥 Error occurred: $e");
-                }
+                apiService.getProductSuggestion("8", file).listen((data) {
+                  setState(() {
+                    _text = data.message;
+                  });
+                });
               },
               icon: Icon(Icons.camera),
             ),
+            Text(_text),
           ],
         ),
       ),
