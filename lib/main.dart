@@ -1,5 +1,8 @@
 import 'package:camera/camera.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+
+import 'data/api_service.dart';
 
 late List<CameraDescription> _cameras;
 
@@ -59,6 +62,35 @@ class _CameraAppState extends State<CameraApp> {
     if (!controller.value.isInitialized) {
       return Container();
     }
-    return MaterialApp(home: CameraPreview(controller));
+    return MaterialApp(
+      home: Scaffold(
+        body: Column(
+          children: [
+            CameraPreview(controller),
+            IconButton(
+              onPressed: () async {
+                try {
+                  print("📸 Taking picture...");
+                  final file = await controller.takePicture();
+                  print("✅ Picture taken: ${file.path}");
+                  
+                  final options = BaseOptions(
+                    baseUrl: "http://10.0.2.2:8000",
+                  );
+                  final apiService = ApiServiceImpl(Dio(options));
+                  
+                  print("🔄 Calling getProductSuggestion...");
+                  final result = await apiService.getProductSuggestion("8", file);
+                  print("🎉 Final result received: ${result.type}");
+                } catch (e) {
+                  print("💥 Error occurred: $e");
+                }
+              },
+              icon: Icon(Icons.camera),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
