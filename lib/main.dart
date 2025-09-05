@@ -66,21 +66,32 @@ class _CameraAppState extends State<CameraApp> {
       home: Scaffold(
         body: Column(
           children: [
-            CameraPreview(controller),
+            Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: CameraPreview(controller),
+              ),
+            ),
             IconButton(
               onPressed: () async {
                 try {
                   print("📸 Taking picture...");
                   final file = await controller.takePicture();
                   print("✅ Picture taken: ${file.path}");
-                  
-                  final options = BaseOptions(
-                    baseUrl: "http://10.0.2.2:8000",
-                  );
+
+                  final options = BaseOptions(baseUrl: "http://10.0.2.2:8000");
                   final apiService = ApiServiceImpl(Dio(options));
-                  
+
                   print("🔄 Calling getProductSuggestion...");
-                  final result = await apiService.getProductSuggestion("8", file);
+                  final result = await apiService.getProductSuggestion(
+                    "8",
+                    file,
+                  );
                   print("🎉 Final result received: ${result.type}");
                 } catch (e) {
                   print("💥 Error occurred: $e");
