@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.7.1"
+  animated_quiz_widget:
+    dependency: "direct main"
+    description:
+      name: animated_quiz_widget
+      sha256: "82941ca389c2695bd289544a3edf76c33a5a8dea8c8805395d90a8948dda8ab7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.3"
   args:
     dependency: transitive
     description:

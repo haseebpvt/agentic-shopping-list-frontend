@@ -1,3 +1,4 @@
+import 'package:animated_quiz_widget/quiz_view.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -68,33 +69,54 @@ class _CameraAppState extends State<CameraApp> {
       home: Scaffold(
         body: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+            Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: SizedBox(
+                    height: 300,
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: CameraPreview(controller),
+                    ),
+                  ),
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: CameraPreview(controller),
-              ),
-            ),
-            IconButton(
-              onPressed: () async {
-                final file = await controller.takePicture();
-                final apiService = ApiServiceImpl(
-                  Dio(BaseOptions(baseUrl: "https://shoppinglistagent.shop")),
-                );
+                IconButton(
+                  onPressed: () async {
+                    final file = await controller.takePicture();
+                    final apiService = ApiServiceImpl(
+                      Dio(
+                        BaseOptions(baseUrl: "https://shoppinglistagent.shop"),
+                      ),
+                    );
 
-                apiService.getProductSuggestion("8", file).listen((data) {
-                  setState(() {
-                    _text = data.message;
-                  });
-                });
-              },
-              icon: Icon(Icons.camera),
+                    apiService.getProductSuggestion("8", file).listen((data) {
+                      setState(() {
+                        _text = data.message;
+                      });
+                    });
+                  },
+                  icon: Icon(Icons.camera),
+                ),
+                Text(_text),
+              ],
             ),
-            Text(_text),
+            QuizWidget(
+                questions: [
+                  QuizQuestion(id: "1", question: "Hello", options: ["Hey"]),
+                  QuizQuestion(id: "1", question: "Hello", options: ["Hey"]),
+                  QuizQuestion(id: "1", question: "Hello", options: ["Hey"]),
+                  QuizQuestion(id: "1", question: "Hello", options: ["Hey"]),
+                  QuizQuestion(id: "1", question: "Hello", options: ["Hey"]),
+                ],
+              onQuizCompleted: (data) {
+
+              },
+            ),
           ],
         ),
       ),
