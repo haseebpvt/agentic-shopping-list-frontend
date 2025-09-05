@@ -1,3 +1,4 @@
+import 'package:advanced_shopping_list_frontend/data/model/quiz_resume/quiz_resume.dart';
 import 'package:animated_quiz_widget/quiz_view.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
@@ -29,6 +30,7 @@ class _CameraAppState extends State<CameraApp> {
   String _text = "Status";
   bool _showQuiz = false;
   List<QuizQuestion>? quizQuestionAnswerList = [];
+  String threadId = "";
 
   @override
   void initState() {
@@ -95,6 +97,8 @@ class _CameraAppState extends State<CameraApp> {
                     );
 
                     apiService.getProductSuggestion("8", file).listen((data) {
+                      threadId = data.threadId;
+
                       setState(() {
                         if (data.type == "quiz_interrupt") {
                           _showQuiz = true;
@@ -122,7 +126,22 @@ class _CameraAppState extends State<CameraApp> {
               visible: _showQuiz,
               child: QuizWidget(
                 questions: quizQuestionAnswerList ?? [],
-                onQuizCompleted: (data) {},
+                onQuizCompleted: (data) {
+                  final apiService = ApiServiceImpl(
+                    Dio(BaseOptions(baseUrl: "http://10.0.2.2:8000")),
+                  );
+
+                  final questionAndAnswers = data.map((data) {
+                    return "${data.question}: ${data.selectedAnswer}";
+                  }).toList();
+
+                  apiService.resumeQuiz(
+                    QuizResumeRequest(
+                      threadId: threadId,
+                      questionAndAnswers: questionAndAnswers,
+                    ),
+                  );
+                },
               ),
             ),
           ],
