@@ -37,27 +37,82 @@ class ApiServiceImpl implements ApiService {
       try {
         // Decode bytes to string using utf8.decode with allowMalformed
         final chunk = utf8.decode(bytes, allowMalformed: true);
-
-        final json = jsonDecode(chunk);
-        final result = ProductSuggestion.fromJson(json);
-
-        yield result;
+        print("📦 Received chunk: $chunk");
+        
+        // Try to parse the chunk directly as JSON first
+        try {
+          final json = jsonDecode(chunk.trim());
+          final result = ProductSuggestion.fromJson(json);
+          print("✅ Successfully parsed chunk: ${result.type} - ${result.message}");
+          yield result;
+        } catch (directParseError) {
+          print("⚠️ Direct parse failed, trying line-by-line: $directParseError");
+          
+          // If direct parsing fails, try line-by-line parsing
+          final lines = chunk.split('\n');
+          for (final line in lines) {
+            final trimmedLine = line.trim();
+            if (trimmedLine.isNotEmpty) {
+              try {
+                print("🔄 Processing line: $trimmedLine");
+                final json = jsonDecode(trimmedLine);
+                final result = ProductSuggestion.fromJson(json);
+                print("✅ Successfully parsed line: ${result.type} - ${result.message}");
+                yield result;
+              } catch (lineError) {
+                print("❌ Error parsing line: $lineError");
+                print("❌ Line content: $trimmedLine");
+              }
+            }
+          }
+        }
       } catch (e) {
-        // Error processing chunk: $e
+        print("❌ Error processing chunk: $e");
       }
     }
   }
 
   @override
   Future<QuizResumeResponse> resumeQuiz(QuizResumeRequest request) async {
-    final response = await dio.post(
-      "/resume_quiz",
-      data: request.toJson(),
-      options: Options(
-        headers: {'Content-Type': 'application/json'},
-      ),
-    );
+    print("🔄 Resuming quiz with data: ${request.toJson()}");
     
-    return QuizResumeResponse.fromJson(response.data);
+    // List of possible endpoints to try
+    final endpoints = [
+      "/quiz_resume",
+      "/resume_quiz", 
+      "/continue_quiz",
+      "/submit_quiz_answers",
+      "/quiz_answers"
+    ];
+    
+    for (final endpoint in endpoints) {
+      try {
+        print("🔄 Trying endpoint: $endpoint");
+        final response = await dio.post(
+          endpoint,
+          data: request.toJson(),
+          options: Options(
+            headers: {'Content-Type': 'application/json'},
+          ),
+        );
+        
+        print("✅ Quiz resume response from $endpoint: ${response.data}");
+        return QuizResumeResponse.fromJson(response.data);
+      } catch (e) {
+        print("❌ Endpoint $endpoint failed: $e");
+        if (e is DioException) {
+          print("❌ Status code: ${e.response?.statusCode}");
+          print("❌ Response data: ${e.response?.data}");
+        }
+        
+        // If this is the last endpoint, rethrow the error
+        if (endpoint == endpoints.last) {
+          print("❌ All endpoints failed, rethrowing last error");
+          rethrow;
+        }
+      }
+    }
+    
+    throw Exception("All quiz resume endpoints failed");
   }
 }

@@ -133,6 +133,7 @@ class _CameraScreenState extends State<CameraScreen> {
     return Scaffold(
       body: BlocBuilder<ProductSuggestionBloc, ProductSuggestionState>(
         builder: (context, state) {
+          print("🎨 UI State changed to: ${state.runtimeType}");
           return Column(
             children: [
               // Camera Section
@@ -157,8 +158,11 @@ class _CameraScreenState extends State<CameraScreen> {
                             state is QuizSubmissionLoading
                         ? null
                         : () async {
+                            print("📸 Camera button pressed");
                             final file = await controller.takePicture();
+                            print("📸 Picture taken: ${file.path}");
                             if (!mounted) return;
+                            print("📸 Dispatching GetProductSuggestionEvent");
                             context
                                 .read<ProductSuggestionBloc>()
                                 .add(GetProductSuggestionEvent(
@@ -236,27 +240,22 @@ class _CameraScreenState extends State<CameraScreen> {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: QuizWidget(
-              questions: state.quizQuestions,
-              onQuizCompleted: (data) {
-                final questionAndAnswers = data.map((item) {
-                  return "${item.question}: ${item.selectedAnswer}";
-                }).toList();
+        child: QuizWidget(
+          questions: state.quizQuestions,
+          onQuizCompleted: (data) {
+            final questionAndAnswers = data.map((item) {
+              return "${item.question}: ${item.selectedAnswer}";
+            }).toList();
 
-                context.read<ProductSuggestionBloc>().add(
-                      SubmitQuizEvent(
-                        quizRequest: QuizResumeRequest(
-                          threadId: state.threadId,
-                          questionAndAnswers: questionAndAnswers,
-                        ),
-                      ),
-                    );
-              },
-            ),
-          ),
+            context.read<ProductSuggestionBloc>().add(
+                  SubmitQuizEvent(
+                    quizRequest: QuizResumeRequest(
+                      threadId: state.threadId,
+                      questionAndAnswers: questionAndAnswers,
+                    ),
+                  ),
+                );
+          },
         ),
       ),
     );
