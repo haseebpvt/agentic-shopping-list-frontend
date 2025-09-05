@@ -6,3 +6,14 @@ abstract class ApiService {
     String filePath,
   );
 }
+
+class ApiServiceImpl implements ApiService {
+  @override
+  Future<ProductSuggestion> getProductSuggestion(
+    String userId,
+    String filePath,
+  ) {
+    // TODO: implement getProductSuggestion
+    throw UnimplementedError();
+  }
+}
