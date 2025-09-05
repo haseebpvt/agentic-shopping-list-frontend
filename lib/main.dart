@@ -32,6 +32,7 @@ class _CameraAppState extends State<CameraApp> {
   List<QuizQuestion>? quizQuestionAnswerList = [];
   String threadId = "";
 
+
   @override
   void initState() {
     super.initState();
@@ -127,6 +128,10 @@ class _CameraAppState extends State<CameraApp> {
               child: QuizWidget(
                 questions: quizQuestionAnswerList ?? [],
                 onQuizCompleted: (data) {
+                  setState(() {
+                    _showQuiz = false;
+                  });
+
                   final apiService = ApiServiceImpl(
                     Dio(BaseOptions(baseUrl: "http://10.0.2.2:8000")),
                   );
@@ -140,7 +145,9 @@ class _CameraAppState extends State<CameraApp> {
                       threadId: threadId,
                       questionAndAnswers: questionAndAnswers,
                     ),
-                  );
+                  ).then((data) {
+
+                  });
                 },
               ),
             ),
