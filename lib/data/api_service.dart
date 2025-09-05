@@ -27,47 +27,115 @@ class ApiServiceImpl implements ApiService {
       "file": await MultipartFile.fromFile(file.path, filename: fileName),
     });
 
-    final response = await dio.post(
-      "/get_product_recommendation",
-      data: formData,
-      options: Options(responseType: ResponseType.stream),
-    );
+    print("🌐 Making request to: ${dio.options.baseUrl}/get_product_recommendation");
+    print("📤 Request data: user_id=$userId, file=$fileName");
+
+    final Response response;
+    try {
+      response = await dio.post(
+        "/get_product_recommendation",
+        data: formData,
+        options: Options(responseType: ResponseType.stream),
+      );
+      
+      print("✅ Connected successfully, status: ${response.statusCode}");
+    } catch (e) {
+      print("❌ Connection failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
     
+    String buffer = '';
     await for (final bytes in response.data!.stream) {
       try {
         // Decode bytes to string using utf8.decode with allowMalformed
         final chunk = utf8.decode(bytes, allowMalformed: true);
+        buffer += chunk;
         print("📦 Received chunk: $chunk");
+        print("📝 Current buffer: $buffer");
         
-        // Try to parse the chunk directly as JSON first
-        try {
-          final json = jsonDecode(chunk.trim());
-          final result = ProductSuggestion.fromJson(json);
-          print("✅ Successfully parsed chunk: ${result.type} - ${result.message}");
-          yield result;
-        } catch (directParseError) {
-          print("⚠️ Direct parse failed, trying line-by-line: $directParseError");
+        // Parse multiple JSON objects that might be concatenated
+        while (buffer.isNotEmpty) {
+          buffer = buffer.trim();
+          if (buffer.isEmpty) break;
           
-          // If direct parsing fails, try line-by-line parsing
-          final lines = chunk.split('\n');
-          for (final line in lines) {
-            final trimmedLine = line.trim();
-            if (trimmedLine.isNotEmpty) {
-              try {
-                print("🔄 Processing line: $trimmedLine");
-                final json = jsonDecode(trimmedLine);
-                final result = ProductSuggestion.fromJson(json);
-                print("✅ Successfully parsed line: ${result.type} - ${result.message}");
-                yield result;
-              } catch (lineError) {
-                print("❌ Error parsing line: $lineError");
-                print("❌ Line content: $trimmedLine");
+          // Find the end of the first JSON object
+          int braceCount = 0;
+          int endIndex = -1;
+          bool inString = false;
+          bool escapeNext = false;
+          
+          for (int i = 0; i < buffer.length; i++) {
+            final char = buffer[i];
+            
+            if (escapeNext) {
+              escapeNext = false;
+              continue;
+            }
+            
+            if (char == '\\') {
+              escapeNext = true;
+              continue;
+            }
+            
+            if (char == '"') {
+              inString = !inString;
+              continue;
+            }
+            
+            if (!inString) {
+              if (char == '{') {
+                braceCount++;
+              } else if (char == '}') {
+                braceCount--;
+                if (braceCount == 0) {
+                  endIndex = i;
+                  break;
+                }
               }
             }
+          }
+          
+          if (endIndex != -1) {
+            // Extract the complete JSON object
+            final jsonStr = buffer.substring(0, endIndex + 1);
+            buffer = buffer.substring(endIndex + 1);
+            
+            try {
+              print("🔄 Processing JSON: $jsonStr");
+              final json = jsonDecode(jsonStr);
+              final result = ProductSuggestion.fromJson(json);
+              print("✅ Successfully parsed: ${result.type} - ${result.message}");
+              yield result;
+            } catch (parseError) {
+              print("❌ Error parsing JSON: $parseError");
+              print("❌ JSON content: $jsonStr");
+            }
+          } else {
+            // No complete JSON object found, wait for more data
+            break;
           }
         }
       } catch (e) {
         print("❌ Error processing chunk: $e");
+      }
+    }
+    
+    // Handle any remaining data in buffer
+    if (buffer.trim().isNotEmpty) {
+      try {
+        print("🔄 Processing final buffer: ${buffer.trim()}");
+        final json = jsonDecode(buffer.trim());
+        final result = ProductSuggestion.fromJson(json);
+        print("✅ Successfully parsed final: ${result.type} - ${result.message}");
+        yield result;
+      } catch (bufferError) {
+        print("❌ Error parsing final buffer: $bufferError");
+        print("❌ Buffer content: $buffer");
       }
     }
   }
@@ -78,11 +146,9 @@ class ApiServiceImpl implements ApiService {
     
     // List of possible endpoints to try
     final endpoints = [
-      "/quiz_resume",
-      "/resume_quiz", 
-      "/continue_quiz",
-      "/submit_quiz_answers",
-      "/quiz_answers"
+      "/resume_quiz",
+      "/quiz_resume", 
+      "/submit_quiz_answers"
     ];
     
     for (final endpoint in endpoints) {
