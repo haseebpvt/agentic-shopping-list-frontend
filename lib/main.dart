@@ -26,7 +26,9 @@ class CameraApp extends StatefulWidget {
 class _CameraAppState extends State<CameraApp> {
   late CameraController controller;
 
-  String _text = "-";
+  String _text = "Status";
+  bool _showQuiz = false;
+  List<QuizQuestion>? quizQuestionAnswerList = [];
 
   @override
   void initState() {
@@ -89,33 +91,39 @@ class _CameraAppState extends State<CameraApp> {
                   onPressed: () async {
                     final file = await controller.takePicture();
                     final apiService = ApiServiceImpl(
-                      Dio(
-                        BaseOptions(baseUrl: "https://shoppinglistagent.shop"),
-                      ),
+                      Dio(BaseOptions(baseUrl: "http://10.0.2.2:8000")),
                     );
 
                     apiService.getProductSuggestion("8", file).listen((data) {
                       setState(() {
+                        if (data.type == "quiz_interrupt") {
+                          _showQuiz = true;
+                          final quizQuestions = data.quiz!.quiz;
+
+                          quizQuestionAnswerList = quizQuestions?.map((item) {
+                            return QuizQuestion(
+                              id: item.question.hashCode.toString(),
+                              question: item.question,
+                              options: item.answers,
+                            );
+                          }).toList();
+                        }
+
                         _text = data.message;
                       });
                     });
                   },
                   icon: Icon(Icons.camera),
                 ),
-                Text(_text),
               ],
             ),
-            QuizWidget(
-                questions: [
-                  QuizQuestion(id: "1", question: "Hello", options: ["Hey"]),
-                  QuizQuestion(id: "1", question: "Hello", options: ["Hey"]),
-                  QuizQuestion(id: "1", question: "Hello", options: ["Hey"]),
-                  QuizQuestion(id: "1", question: "Hello", options: ["Hey"]),
-                  QuizQuestion(id: "1", question: "Hello", options: ["Hey"]),
-                ],
-              onQuizCompleted: (data) {
-
-              },
+            Text(_text),
+            Visibility(
+              visible: _showQuiz,
+              child: QuizWidget(
+                questions: quizQuestionAnswerList ?? [],
+                onQuizCompleted: (data) {},
+              ),
             ),
           ],
         ),
