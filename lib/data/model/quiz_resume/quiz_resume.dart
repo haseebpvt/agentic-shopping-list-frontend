@@ -4,6 +4,17 @@ part 'quiz_resume.freezed.dart';
 part 'quiz_resume.g.dart';
 
 @freezed
+class QuizResumeRequest with _$QuizResumeRequest {
+  const factory QuizResumeRequest({
+    @JsonKey(name: 'thread_id') required String threadId,
+    @JsonKey(name: 'question_and_answers') required List<String> questionAndAnswers,
+  }) = _QuizResumeRequest;
+
+  factory QuizResumeRequest.fromJson(Map<String, dynamic> json) =>
+      _$QuizResumeRequestFromJson(json);
+}
+
+@freezed
 class QuizResumeResponse with _$QuizResumeResponse {
   const factory QuizResumeResponse({
     required bool success,

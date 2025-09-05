@@ -15,6 +15,208 @@ final _privateConstructorUsedError = UnsupportedError(
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
 
+QuizResumeRequest _$QuizResumeRequestFromJson(Map<String, dynamic> json) {
+  return _QuizResumeRequest.fromJson(json);
+}
+
+/// @nodoc
+mixin _$QuizResumeRequest {
+  @JsonKey(name: 'thread_id')
+  String get threadId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'question_and_answers')
+  List<String> get questionAndAnswers => throw _privateConstructorUsedError;
+
+  /// Serializes this QuizResumeRequest to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of QuizResumeRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $QuizResumeRequestCopyWith<QuizResumeRequest> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $QuizResumeRequestCopyWith<$Res> {
+  factory $QuizResumeRequestCopyWith(
+    QuizResumeRequest value,
+    $Res Function(QuizResumeRequest) then,
+  ) = _$QuizResumeRequestCopyWithImpl<$Res, QuizResumeRequest>;
+  @useResult
+  $Res call({
+    @JsonKey(name: 'thread_id') String threadId,
+    @JsonKey(name: 'question_and_answers') List<String> questionAndAnswers,
+  });
+}
+
+/// @nodoc
+class _$QuizResumeRequestCopyWithImpl<$Res, $Val extends QuizResumeRequest>
+    implements $QuizResumeRequestCopyWith<$Res> {
+  _$QuizResumeRequestCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of QuizResumeRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? threadId = null, Object? questionAndAnswers = null}) {
+    return _then(
+      _value.copyWith(
+            threadId: null == threadId
+                ? _value.threadId
+                : threadId // ignore: cast_nullable_to_non_nullable
+                      as String,
+            questionAndAnswers: null == questionAndAnswers
+                ? _value.questionAndAnswers
+                : questionAndAnswers // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$QuizResumeRequestImplCopyWith<$Res>
+    implements $QuizResumeRequestCopyWith<$Res> {
+  factory _$$QuizResumeRequestImplCopyWith(
+    _$QuizResumeRequestImpl value,
+    $Res Function(_$QuizResumeRequestImpl) then,
+  ) = __$$QuizResumeRequestImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    @JsonKey(name: 'thread_id') String threadId,
+    @JsonKey(name: 'question_and_answers') List<String> questionAndAnswers,
+  });
+}
+
+/// @nodoc
+class __$$QuizResumeRequestImplCopyWithImpl<$Res>
+    extends _$QuizResumeRequestCopyWithImpl<$Res, _$QuizResumeRequestImpl>
+    implements _$$QuizResumeRequestImplCopyWith<$Res> {
+  __$$QuizResumeRequestImplCopyWithImpl(
+    _$QuizResumeRequestImpl _value,
+    $Res Function(_$QuizResumeRequestImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of QuizResumeRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? threadId = null, Object? questionAndAnswers = null}) {
+    return _then(
+      _$QuizResumeRequestImpl(
+        threadId: null == threadId
+            ? _value.threadId
+            : threadId // ignore: cast_nullable_to_non_nullable
+                  as String,
+        questionAndAnswers: null == questionAndAnswers
+            ? _value._questionAndAnswers
+            : questionAndAnswers // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$QuizResumeRequestImpl implements _QuizResumeRequest {
+  const _$QuizResumeRequestImpl({
+    @JsonKey(name: 'thread_id') required this.threadId,
+    @JsonKey(name: 'question_and_answers')
+    required final List<String> questionAndAnswers,
+  }) : _questionAndAnswers = questionAndAnswers;
+
+  factory _$QuizResumeRequestImpl.fromJson(Map<String, dynamic> json) =>
+      _$$QuizResumeRequestImplFromJson(json);
+
+  @override
+  @JsonKey(name: 'thread_id')
+  final String threadId;
+  final List<String> _questionAndAnswers;
+  @override
+  @JsonKey(name: 'question_and_answers')
+  List<String> get questionAndAnswers {
+    if (_questionAndAnswers is EqualUnmodifiableListView)
+      return _questionAndAnswers;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_questionAndAnswers);
+  }
+
+  @override
+  String toString() {
+    return 'QuizResumeRequest(threadId: $threadId, questionAndAnswers: $questionAndAnswers)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$QuizResumeRequestImpl &&
+            (identical(other.threadId, threadId) ||
+                other.threadId == threadId) &&
+            const DeepCollectionEquality().equals(
+              other._questionAndAnswers,
+              _questionAndAnswers,
+            ));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    threadId,
+    const DeepCollectionEquality().hash(_questionAndAnswers),
+  );
+
+  /// Create a copy of QuizResumeRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$QuizResumeRequestImplCopyWith<_$QuizResumeRequestImpl> get copyWith =>
+      __$$QuizResumeRequestImplCopyWithImpl<_$QuizResumeRequestImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$QuizResumeRequestImplToJson(this);
+  }
+}
+
+abstract class _QuizResumeRequest implements QuizResumeRequest {
+  const factory _QuizResumeRequest({
+    @JsonKey(name: 'thread_id') required final String threadId,
+    @JsonKey(name: 'question_and_answers')
+    required final List<String> questionAndAnswers,
+  }) = _$QuizResumeRequestImpl;
+
+  factory _QuizResumeRequest.fromJson(Map<String, dynamic> json) =
+      _$QuizResumeRequestImpl.fromJson;
+
+  @override
+  @JsonKey(name: 'thread_id')
+  String get threadId;
+  @override
+  @JsonKey(name: 'question_and_answers')
+  List<String> get questionAndAnswers;
+
+  /// Create a copy of QuizResumeRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$QuizResumeRequestImplCopyWith<_$QuizResumeRequestImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
 QuizResumeResponse _$QuizResumeResponseFromJson(Map<String, dynamic> json) {
   return _QuizResumeResponse.fromJson(json);
 }

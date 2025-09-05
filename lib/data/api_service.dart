@@ -1,11 +1,14 @@
 import 'dart:convert';
 
 import 'package:advanced_shopping_list_frontend/data/model/product_suggestion/product_suggestion.dart';
+import 'package:advanced_shopping_list_frontend/data/model/quiz_resume/quiz_resume.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 
 abstract class ApiService {
   Stream<ProductSuggestion> getProductSuggestion(String userId, XFile file);
+
+  Future<QuizResumeResponse> resumeQuiz(QuizResumeRequest request);
 }
 
 class ApiServiceImpl implements ApiService {
@@ -43,5 +46,18 @@ class ApiServiceImpl implements ApiService {
         print("❌ Error processing chunk: $e");
       }
     }
+  }
+
+  @override
+  Future<QuizResumeResponse> resumeQuiz(QuizResumeRequest request) async {
+    final response = await dio.post(
+      "/resume_quiz",
+      data: request.toJson(),
+      options: Options(
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
+    
+    return QuizResumeResponse.fromJson(response.data);
   }
 }
