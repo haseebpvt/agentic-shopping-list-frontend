@@ -43,7 +43,7 @@ class ApiServiceImpl implements ApiService {
 
         yield result;
       } catch (e) {
-        print("❌ Error processing chunk: $e");
+        // Error processing chunk: $e
       }
     }
   }
