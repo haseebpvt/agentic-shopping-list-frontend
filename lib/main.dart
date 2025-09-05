@@ -83,7 +83,7 @@ class _CameraAppState extends State<CameraApp> {
               onPressed: () async {
                 final file = await controller.takePicture();
                 final apiService = ApiServiceImpl(
-                  Dio(BaseOptions(baseUrl: "http://10.0.2.2:8000")),
+                  Dio(BaseOptions(baseUrl: "https://shoppinglistagent.shop")),
                 );
 
                 apiService.getProductSuggestion("8", file).listen((data) {
