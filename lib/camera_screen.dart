@@ -1,4 +1,5 @@
 import 'package:advanced_shopping_list_frontend/bloc/product_suggestion/product_suggestion.dart';
+import 'package:advanced_shopping_list_frontend/photo_processing_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -108,21 +109,43 @@ class _CameraScreenState extends State<CameraScreen> {
                         : () async {
                             print("📸 Camera button pressed");
                             
-                            // Show compression loading state
-                            context.read<ProductSuggestionBloc>().add(const ResetEvent());
-                            await Future.delayed(const Duration(milliseconds: 100));
-                            
-                            final file = await widget.controller.takePicture();
-                            print("📸 Picture taken: ${file.path}");
-                            if (!mounted) return;
-                            print("📸 Dispatching GetProductSuggestionEvent");
-                            if (mounted) {
-                              context
-                                  .read<ProductSuggestionBloc>()
-                                  .add(GetProductSuggestionEvent(
-                                    userId: "8",
-                                    imageFile: file,
-                                  ));
+                            try {
+                              final file = await widget.controller.takePicture();
+                              print("📸 Picture taken: ${file.path}");
+                              
+                              if (!mounted) return;
+                              
+                              // Get the bloc reference before navigation
+                              final bloc = context.read<ProductSuggestionBloc>();
+                              
+                              // Navigate to photo processing screen
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => BlocProvider.value(
+                                    value: bloc,
+                                    child: PhotoProcessingScreen(
+                                      imagePath: file.path,
+                                    ),
+                                  ),
+                                ),
+                              );
+                              
+                              // Start processing the image
+                              print("📸 Dispatching GetProductSuggestionEvent");
+                              bloc.add(GetProductSuggestionEvent(
+                                userId: "8",
+                                imageFile: file,
+                              ));
+                            } catch (e) {
+                              print("📸 Error taking picture: $e");
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text("Failed to take picture: $e"),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
                             }
                           },
                     child: Container(
