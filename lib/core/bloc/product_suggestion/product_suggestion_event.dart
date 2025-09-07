@@ -1,4 +1,4 @@
-import 'package:advanced_shopping_list_frontend/data/model/quiz_resume/quiz_resume.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/quiz_resume/quiz_resume.dart';
 import 'package:camera/camera.dart';
 import 'package:equatable/equatable.dart';
 

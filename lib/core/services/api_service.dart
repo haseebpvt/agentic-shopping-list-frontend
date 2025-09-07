@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:advanced_shopping_list_frontend/data/model/product_suggestion/product_suggestion.dart';
-import 'package:advanced_shopping_list_frontend/data/model/quiz_resume/quiz_resume.dart';
-import 'package:advanced_shopping_list_frontend/utils/image_compression.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/product_suggestion/product_suggestion.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/quiz_resume/quiz_resume.dart';
+import 'package:advanced_shopping_list_frontend/core/utils/image_compression.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 

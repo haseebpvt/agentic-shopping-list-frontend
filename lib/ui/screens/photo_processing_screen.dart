@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:advanced_shopping_list_frontend/bloc/product_suggestion/product_suggestion.dart';
-import 'package:advanced_shopping_list_frontend/data/model/quiz_resume/quiz_resume.dart';
-import 'package:advanced_shopping_list_frontend/suggested_product_view.dart';
+import 'package:advanced_shopping_list_frontend/core/bloc/product_suggestion/product_suggestion.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/quiz_resume/quiz_resume.dart';
+import '../widgets/suggested_product_view.dart';
 import 'package:animated_quiz_widget/quiz_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

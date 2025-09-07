@@ -1,5 +1,5 @@
-import 'package:advanced_shopping_list_frontend/camera_screen.dart';
-import 'package:advanced_shopping_list_frontend/home_screen.dart';
+import 'camera_screen.dart';
+import 'home_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 

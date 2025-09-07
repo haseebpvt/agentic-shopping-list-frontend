@@ -1,11 +1,9 @@
-import 'package:advanced_shopping_list_frontend/bloc/product_suggestion/product_suggestion.dart';
-import 'package:advanced_shopping_list_frontend/main_page_view.dart';
+import 'package:advanced_shopping_list_frontend/core/core.dart';
+import 'package:advanced_shopping_list_frontend/ui/ui.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'data/api_service.dart';
 
 late List<CameraDescription> _cameras;
 

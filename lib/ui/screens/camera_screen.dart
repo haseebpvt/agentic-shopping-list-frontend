@@ -1,5 +1,5 @@
-import 'package:advanced_shopping_list_frontend/bloc/product_suggestion/product_suggestion.dart';
-import 'package:advanced_shopping_list_frontend/photo_processing_screen.dart';
+import 'package:advanced_shopping_list_frontend/core/bloc/product_suggestion/product_suggestion.dart';
+import 'photo_processing_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
