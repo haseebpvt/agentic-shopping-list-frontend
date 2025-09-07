@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:advanced_shopping_list_frontend/core/core.dart';
+import 'package:advanced_shopping_list_frontend/ui/widgets/widgets.dart';
 
 class PreferencesScreen extends StatefulWidget {
   const PreferencesScreen({super.key});
@@ -102,20 +103,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
             child: BlocBuilder<PreferenceListBloc, PreferenceListState>(
               builder: (context, state) {
                 if (state is PreferenceListLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
+                  return const PreferenceListShimmer();
                 } else if (state is PreferenceListSearching) {
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Searching...'),
-                      ],
-                    ),
-                  );
+                  return const SearchShimmer();
                 } else if (state is PreferenceListError) {
                   return Center(
                     child: Column(

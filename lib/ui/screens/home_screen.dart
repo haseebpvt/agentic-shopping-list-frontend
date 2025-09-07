@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:advanced_shopping_list_frontend/core/core.dart';
 import 'package:advanced_shopping_list_frontend/ui/screens/preferences_screen.dart';
+import 'package:advanced_shopping_list_frontend/ui/widgets/widgets.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(int)? onPageChange;
@@ -76,9 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: BlocBuilder<ShoppingListBloc, ShoppingListState>(
                 builder: (context, state) {
                   if (state is ShoppingListLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
+                    return const ShoppingListShimmer();
                   } else if (state is ShoppingListError) {
                     return Center(
                       child: Column(
