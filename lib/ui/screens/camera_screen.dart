@@ -5,18 +5,93 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CameraScreen extends StatefulWidget {
-  final CameraController controller;
+  final List<CameraDescription> cameras;
   
-  const CameraScreen({super.key, required this.controller});
+  const CameraScreen({super.key, required this.cameras});
 
   @override
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> {
+class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
+  CameraController? _controller;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeCamera();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) {
+      return;
+    }
+
+    switch (state) {
+      case AppLifecycleState.paused:
+        _controller?.dispose();
+        break;
+      case AppLifecycleState.resumed:
+        _initializeCamera();
+        break;
+      default:
+        break;
+    }
+  }
+
+  Future<void> _initializeCamera() async {
+    if (widget.cameras.isEmpty) return;
+
+    _controller = CameraController(
+      widget.cameras[0],
+      ResolutionPreset.high,
+      enableAudio: false, // Disable audio to reduce resource usage
+    );
+
+    try {
+      await _controller!.initialize();
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    } catch (e) {
+      print('Camera initialization error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to initialize camera: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pauseCamera() async {
+    if (_controller != null && _controller!.value.isInitialized) {
+      await _controller!.dispose();
+      setState(() {
+        _isInitialized = false;
+        _controller = null;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (!widget.controller.value.isInitialized) {
+    if (!_isInitialized || _controller == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
@@ -29,7 +104,7 @@ class _CameraScreenState extends State<CameraScreen> {
             fit: StackFit.expand,
             children: [
               // Full screen camera preview
-              CameraPreview(widget.controller),
+              CameraPreview(_controller!),
               
               // Back button
               Positioned(
@@ -110,8 +185,11 @@ class _CameraScreenState extends State<CameraScreen> {
                             print("📸 Camera button pressed");
                             
                             try {
-                              final file = await widget.controller.takePicture();
+                              final file = await _controller!.takePicture();
                               print("📸 Picture taken: ${file.path}");
+                              
+                              // Pause camera to free up resources before navigation
+                              await _pauseCamera();
                               
                               if (!mounted) return;
                               
@@ -128,7 +206,12 @@ class _CameraScreenState extends State<CameraScreen> {
                                     ),
                                   ),
                                 ),
-                              );
+                              ).then((_) {
+                                // Re-initialize camera when returning from photo processing
+                                if (mounted) {
+                                  _initializeCamera();
+                                }
+                              });
                               
                               // Start processing the image
                               print("📸 Dispatching GetProductSuggestionEvent");

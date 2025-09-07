@@ -4,9 +4,9 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 class MainPageView extends StatefulWidget {
-  final CameraController cameraController;
+  final List<CameraDescription> cameras;
   
-  const MainPageView({super.key, required this.cameraController});
+  const MainPageView({super.key, required this.cameras});
 
   @override
   State<MainPageView> createState() => _MainPageViewState();
@@ -55,7 +55,7 @@ class _MainPageViewState extends State<MainPageView> {
               const HomeScreen(),
               
               // Camera Screen (Page 1)
-              CameraScreen(controller: widget.cameraController),
+              CameraScreen(cameras: widget.cameras),
             ],
           ),
           
