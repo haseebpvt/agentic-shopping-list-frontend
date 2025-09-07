@@ -1,8 +1,8 @@
 
-import 'package:advanced_shopping_list_frontend/bloc/product_suggestion/product_suggestion_event.dart';
-import 'package:advanced_shopping_list_frontend/bloc/product_suggestion/product_suggestion_state.dart';
-import 'package:advanced_shopping_list_frontend/data/api_service.dart';
-import 'package:advanced_shopping_list_frontend/data/model/product_suggestion/product_suggestion.dart';
+import 'package:advanced_shopping_list_frontend/core/bloc/product_suggestion/product_suggestion_event.dart';
+import 'package:advanced_shopping_list_frontend/core/bloc/product_suggestion/product_suggestion_state.dart';
+import 'package:advanced_shopping_list_frontend/core/services/api_service.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/product_suggestion/product_suggestion.dart';
 import 'package:animated_quiz_widget/quiz_view.dart' as quiz_widget;
 import 'package:flutter_bloc/flutter_bloc.dart';
 

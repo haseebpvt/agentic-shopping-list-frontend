@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:advanced_shopping_list_frontend/data/model/product_suggestion/product_suggestion.dart';
-import 'package:advanced_shopping_list_frontend/data/model/quiz_resume/quiz_resume.dart';
-import 'package:advanced_shopping_list_frontend/utils/image_compression.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/product_suggestion/product_suggestion.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/quiz_resume/quiz_resume.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/shopping_list/shopping_list.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/preference_list/preference_list.dart';
+import 'package:advanced_shopping_list_frontend/core/utils/image_compression.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 
@@ -11,6 +13,10 @@ abstract class ApiService {
   Stream<ProductSuggestion> getProductSuggestion(String userId, XFile file);
 
   Future<QuizResumeResponse> resumeQuiz(QuizResumeRequest request);
+
+  Future<ShoppingListResponse> getShoppingList(String userId);
+
+  Future<PreferenceListResponse> getPreferenceList(String userId, {String? semanticSearchText});
 }
 
 class ApiServiceImpl implements ApiService {
@@ -213,5 +219,77 @@ class ApiServiceImpl implements ApiService {
     }
     
     throw Exception("All quiz resume endpoints failed");
+  }
+
+  @override
+  Future<ShoppingListResponse> getShoppingList(String userId) async {
+    print("🔄 Getting shopping list for user: $userId");
+    
+    try {
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "user_id": userId,
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/get_shopping_list");
+      print("📤 Request data: user_id=$userId");
+
+      final response = await dio.get(
+        "/get_shopping_list",
+        data: formData,
+      );
+      
+      print("✅ Shopping list response: ${response.data}");
+      return ShoppingListResponse.fromJson(response.data);
+    } catch (e) {
+      print("❌ Get shopping list failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<PreferenceListResponse> getPreferenceList(String userId, {String? semanticSearchText}) async {
+    print("🔄 Getting preference list for user: $userId${semanticSearchText != null ? ' with search: $semanticSearchText' : ''}");
+    
+    try {
+      // Create form data as per the API specification
+      Map<String, dynamic> formDataMap = {
+        "user_id": userId,
+      };
+      
+      // Add semantic search text if provided
+      if (semanticSearchText != null && semanticSearchText.isNotEmpty) {
+        formDataMap["semantic_search_text"] = semanticSearchText;
+      }
+      
+      FormData formData = FormData.fromMap(formDataMap);
+
+      // Note: The preference list API might be on a different server
+      // Using the curl example: http://0.0.0.0:8000/get_preference_list
+      // We'll use the configured base URL but the endpoint path
+      print("🌐 Making request to: ${dio.options.baseUrl}/get_preference_list");
+      print("📤 Request data: $formDataMap");
+
+      final response = await dio.get(
+        "/get_preference_list",
+        data: formData,
+      );
+      
+      print("✅ Preference list response: ${response.data}");
+      return PreferenceListResponse.fromJson(response.data);
+    } catch (e) {
+      print("❌ Get preference list failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
   }
 }

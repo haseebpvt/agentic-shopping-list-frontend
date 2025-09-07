@@ -1,4 +1,4 @@
-import 'package:advanced_shopping_list_frontend/data/model/product_suggestion/product_suggestion.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/product_suggestion/product_suggestion.dart';
 import 'package:flutter/material.dart';
 
 class SuggestedProductView extends StatelessWidget {
