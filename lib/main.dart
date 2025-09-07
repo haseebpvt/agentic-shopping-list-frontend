@@ -26,18 +26,25 @@ class CameraApp extends StatefulWidget {
 class _CameraAppState extends State<CameraApp> {
   @override
   Widget build(BuildContext context) {
+    final ApiService apiService = ApiServiceImpl(
+      Dio(BaseOptions(
+        baseUrl: "https://shoppinglistagent.shop",
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 60),
+        sendTimeout: const Duration(seconds: 30),
+      )),
+    );
+
     return MaterialApp(
-      home: BlocProvider(
-        create: (context) => ProductSuggestionBloc(
-          apiService: ApiServiceImpl(
-            Dio(BaseOptions(
-              baseUrl: "https://shoppinglistagent.shop",
-              connectTimeout: const Duration(seconds: 30),
-              receiveTimeout: const Duration(seconds: 60),
-              sendTimeout: const Duration(seconds: 30),
-            )),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => ProductSuggestionBloc(apiService: apiService),
           ),
-        ),
+          BlocProvider(
+            create: (context) => ShoppingListBloc(apiService: apiService),
+          ),
+        ],
         child: MainPageView(cameras: _cameras),
       ),
     );

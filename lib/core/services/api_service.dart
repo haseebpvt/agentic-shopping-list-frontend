@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:advanced_shopping_list_frontend/core/models/model/product_suggestion/product_suggestion.dart';
 import 'package:advanced_shopping_list_frontend/core/models/model/quiz_resume/quiz_resume.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/shopping_list/shopping_list.dart';
 import 'package:advanced_shopping_list_frontend/core/utils/image_compression.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
@@ -11,6 +12,8 @@ abstract class ApiService {
   Stream<ProductSuggestion> getProductSuggestion(String userId, XFile file);
 
   Future<QuizResumeResponse> resumeQuiz(QuizResumeRequest request);
+
+  Future<ShoppingListResponse> getShoppingList(String userId);
 }
 
 class ApiServiceImpl implements ApiService {
@@ -213,5 +216,36 @@ class ApiServiceImpl implements ApiService {
     }
     
     throw Exception("All quiz resume endpoints failed");
+  }
+
+  @override
+  Future<ShoppingListResponse> getShoppingList(String userId) async {
+    print("🔄 Getting shopping list for user: $userId");
+    
+    try {
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "user_id": userId,
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/get_shopping_list");
+      print("📤 Request data: user_id=$userId");
+
+      final response = await dio.get(
+        "/get_shopping_list",
+        data: formData,
+      );
+      
+      print("✅ Shopping list response: ${response.data}");
+      return ShoppingListResponse.fromJson(response.data);
+    } catch (e) {
+      print("❌ Get shopping list failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
   }
 }
