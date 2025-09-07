@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:advanced_shopping_list_frontend/core/core.dart';
+import 'package:advanced_shopping_list_frontend/ui/screens/preferences_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(int)? onPageChange;
@@ -43,6 +44,29 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Shopping List'),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.psychology),
+            tooltip: 'Preferences',
+            onPressed: () {
+              // Get the API service from main.dart context by going up the widget tree
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (newContext) => MultiBlocProvider(
+                    providers: [
+                      // Provide all the same blocs that are available in main
+                      BlocProvider.value(value: context.read<ProductSuggestionBloc>()),
+                      BlocProvider.value(value: context.read<ShoppingListBloc>()),
+                      BlocProvider.value(value: context.read<PreferenceListBloc>()),
+                    ],
+                    child: const PreferencesScreen(),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(

@@ -44,6 +44,9 @@ class _CameraAppState extends State<CameraApp> {
           BlocProvider(
             create: (context) => ShoppingListBloc(apiService: apiService),
           ),
+          BlocProvider(
+            create: (context) => PreferenceListBloc(apiService: apiService),
+          ),
         ],
         child: MainPageView(cameras: _cameras),
       ),
