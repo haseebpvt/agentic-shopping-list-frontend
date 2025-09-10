@@ -17,6 +17,10 @@ abstract class ApiService {
   Future<ShoppingListResponse> getShoppingList(String userId);
 
   Future<PreferenceListResponse> getPreferenceList(String userId, {String? semanticSearchText});
+
+  Future<Map<String, dynamic>> updatePreference(int itemId, String text);
+
+  Future<Map<String, dynamic>> deletePreference(int itemId);
 }
 
 class ApiServiceImpl implements ApiService {
@@ -47,13 +51,13 @@ class ApiServiceImpl implements ApiService {
       "file": await MultipartFile.fromFile(compressedFile.path, filename: fileName),
     });
 
-    print("🌐 Making request to: ${dio.options.baseUrl}/get_product_recommendation");
+    print("🌐 Making request to: ${dio.options.baseUrl}/recommend/get_product_recommendation");
     print("📤 Request data: user_id=$userId, file=$fileName");
 
     final Response response;
     try {
       response = await dio.post(
-        "/get_product_recommendation",
+        "/recommend/get_product_recommendation",
         data: formData,
         options: Options(responseType: ResponseType.stream),
       );
@@ -185,6 +189,7 @@ class ApiServiceImpl implements ApiService {
     
     // List of possible endpoints to try
     final endpoints = [
+      "/recommend/quiz_resume",
       "/resume_quiz",
       "/quiz_resume", 
       "/submit_quiz_answers"
@@ -231,11 +236,11 @@ class ApiServiceImpl implements ApiService {
         "user_id": userId,
       });
 
-      print("🌐 Making request to: ${dio.options.baseUrl}/get_shopping_list");
+      print("🌐 Making request to: ${dio.options.baseUrl}/shopping_list/get_shopping_list");
       print("📤 Request data: user_id=$userId");
 
       final response = await dio.get(
-        "/get_shopping_list",
+        "/shopping_list/get_shopping_list",
         data: formData,
       );
       
@@ -272,11 +277,11 @@ class ApiServiceImpl implements ApiService {
       // Note: The preference list API might be on a different server
       // Using the curl example: http://0.0.0.0:8000/get_preference_list
       // We'll use the configured base URL but the endpoint path
-      print("🌐 Making request to: ${dio.options.baseUrl}/get_preference_list");
+      print("🌐 Making request to: ${dio.options.baseUrl}/preference/get_preference_list");
       print("📤 Request data: $formDataMap");
 
       final response = await dio.get(
-        "/get_preference_list",
+        "/preference/get_preference_list",
         data: formData,
       );
       
@@ -284,6 +289,69 @@ class ApiServiceImpl implements ApiService {
       return PreferenceListResponse.fromJson(response.data);
     } catch (e) {
       print("❌ Get preference list failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> updatePreference(int itemId, String text) async {
+    print("🔄 Updating preference: itemId=$itemId, text=$text");
+    
+    try {
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "item_id": itemId,
+        "text": text,
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/preference/update");
+      print("📤 Request data: item_id=$itemId, text=$text");
+
+      final response = await dio.post(
+        "/preference/update",
+        data: formData,
+      );
+      
+      print("✅ Update preference response: ${response.data}");
+      return response.data;
+    } catch (e) {
+      print("❌ Update preference failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> deletePreference(int itemId) async {
+    print("🔄 Deleting preference: itemId=$itemId");
+    
+    try {
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "item_id": itemId,
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/preference/delete");
+      print("📤 Request data: item_id=$itemId");
+
+      final response = await dio.delete(
+        "/preference/delete",
+        data: formData,
+      );
+      
+      print("✅ Delete preference response: ${response.data}");
+      return response.data;
+    } catch (e) {
+      print("❌ Delete preference failed: $e");
       if (e is DioException) {
         print("❌ Error type: ${e.type}");
         print("❌ Error message: ${e.message}");

@@ -17,6 +17,54 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _messageController = TextEditingController();
   final String _userId = "8"; // For testing purposes, you can make this dynamic later
 
+  /// Groups shopping list items by category
+  Map<String, List<ShoppingListItem>> _groupItemsByCategory(List<ShoppingListItem> items) {
+    final Map<String, List<ShoppingListItem>> groupedItems = {};
+    
+    for (final item in items) {
+      final categoryName = item.categoryName;
+      if (groupedItems[categoryName] == null) {
+        groupedItems[categoryName] = [];
+      }
+      groupedItems[categoryName]!.add(item);
+    }
+    
+    return groupedItems;
+  }
+
+  /// Returns an appropriate icon for the given category
+  IconData _getCategoryIcon(String categoryName) {
+    switch (categoryName.toLowerCase()) {
+      case 'sports':
+        return Icons.sports_football;
+      case 'food':
+      case 'groceries':
+        return Icons.fastfood;
+      case 'clothing':
+      case 'apparel':
+        return Icons.shopping_bag;
+      case 'electronics':
+        return Icons.devices;
+      case 'health':
+      case 'pharmacy':
+        return Icons.local_pharmacy;
+      case 'home':
+      case 'household':
+        return Icons.home;
+      case 'books':
+        return Icons.book;
+      case 'automotive':
+      case 'car':
+        return Icons.directions_car;
+      case 'toys':
+        return Icons.toys;
+      case 'beauty':
+        return Icons.face;
+      default:
+        return Icons.category;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -145,66 +193,171 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     }
 
+                    final groupedItems = _groupItemsByCategory(state.items);
+                    final categories = groupedItems.keys.toList()..sort();
+
                     return RefreshIndicator(
                       onRefresh: _onRefresh,
                       child: ListView.builder(
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.all(16),
-                        itemCount: state.items.length,
-                        itemBuilder: (context, index) {
-                          final item = state.items[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            elevation: 2,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Theme.of(context).primaryColor,
-                                child: const Icon(
-                                  Icons.shopping_basket,
-                                  color: Colors.white,
-                                  size: 20,
+                        itemCount: categories.length,
+                        itemBuilder: (context, categoryIndex) {
+                          final category = categories[categoryIndex];
+                          final categoryItems = groupedItems[category]!;
+                          
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Category header
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
                                 ),
-                              ),
-                              title: Text(
-                                item.itemName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                margin: const EdgeInsets.only(bottom: 8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Theme.of(context).primaryColor.withOpacity(0.3),
+                                    width: 1,
+                                  ),
                                 ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (item.note.isNotEmpty) ...[
-                                    const SizedBox(height: 4),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      _getCategoryIcon(category),
+                                      color: Theme.of(context).primaryColor,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      'Note: ${item.note}',
+                                      category,
                                       style: TextStyle(
-                                        color: Colors.grey.shade600,
-                                        fontSize: 14,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).primaryColor,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).primaryColor,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        '${categoryItems.length}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ],
-                                  if (item.quantity.isNotEmpty && item.quantity != "Not specified") ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Quantity: ${item.quantity}',
-                                      style: TextStyle(
-                                        color: Colors.grey.shade600,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              trailing: Text(
-                                '#${item.id}',
-                                style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 12,
                                 ),
                               ),
-                            ),
+                              
+                              // Category items
+                              ...categoryItems.map((item) => Card(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                elevation: 2,
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: item.isPurchased 
+                                        ? Colors.green 
+                                        : Theme.of(context).primaryColor,
+                                    child: Icon(
+                                      item.isPurchased 
+                                          ? Icons.check 
+                                          : Icons.shopping_basket,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    item.itemName,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      decoration: item.isPurchased 
+                                          ? TextDecoration.lineThrough 
+                                          : null,
+                                      color: item.isPurchased 
+                                          ? Colors.grey.shade600 
+                                          : null,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      if (item.note.isNotEmpty) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Note: ${item.note}',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                      if (item.quantity.isNotEmpty && item.quantity != "Not specified") ...[
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              'Quantity: ${item.quantity}',
+                                              style: TextStyle(
+                                                color: Colors.grey.shade600,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            if (item.unit.isNotEmpty) ...[
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                item.unit,
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade600,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  trailing: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        '#${item.id}',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade500,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      if (item.isPurchased)
+                                        Icon(
+                                          Icons.shopping_cart_checkout,
+                                          color: Colors.green,
+                                          size: 16,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              )).toList(),
+                              
+                              // Add spacing between categories
+                              const SizedBox(height: 16),
+                            ],
                           );
                         },
                       ),

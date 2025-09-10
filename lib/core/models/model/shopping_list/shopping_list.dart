@@ -22,7 +22,12 @@ class ShoppingListItem with _$ShoppingListItem {
     @JsonKey(name: 'item_name') required String itemName,
     required String note,
     required String quantity,
+    required String unit,
     required int id,
+    @JsonKey(name: 'category_id') required int categoryId,
+    @JsonKey(name: 'category_name') required String categoryName,
+    @JsonKey(name: 'is_purchased') required bool isPurchased,
+    required int timestamp,
   }) = _ShoppingListItem;
 
   factory ShoppingListItem.fromJson(Map<String, dynamic> json) =>

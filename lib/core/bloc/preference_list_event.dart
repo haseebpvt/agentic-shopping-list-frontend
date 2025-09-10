@@ -46,3 +46,31 @@ class ClearSearch extends PreferenceListEvent {
   @override
   List<Object> get props => [userId];
 }
+
+class UpdatePreference extends PreferenceListEvent {
+  final String userId;
+  final int itemId;
+  final String text;
+
+  const UpdatePreference({
+    required this.userId,
+    required this.itemId,
+    required this.text,
+  });
+
+  @override
+  List<Object> get props => [userId, itemId, text];
+}
+
+class DeletePreference extends PreferenceListEvent {
+  final String userId;
+  final int itemId;
+
+  const DeletePreference({
+    required this.userId,
+    required this.itemId,
+  });
+
+  @override
+  List<Object> get props => [userId, itemId];
+}
