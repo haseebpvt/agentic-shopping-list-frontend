@@ -28,7 +28,7 @@ class _CameraAppState extends State<CameraApp> {
   Widget build(BuildContext context) {
     final ApiService apiService = ApiServiceImpl(
       Dio(BaseOptions(
-        baseUrl: "https://shoppinglistagent.shop",
+        baseUrl: "https://shoppinglistagent.shop/api",
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 60),
         sendTimeout: const Duration(seconds: 30),
