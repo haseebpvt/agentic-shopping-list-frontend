@@ -152,8 +152,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     );
-                  } else if (state is ShoppingListLoaded) {
-                    if (state.items.isEmpty) {
+                  } else if (state is ShoppingListLoaded || state is ShoppingListItemUpdating) {
+                    final items = state is ShoppingListLoaded 
+                        ? state.items 
+                        : (state as ShoppingListItemUpdating).items;
+                    
+                    if (items.isEmpty) {
                       return RefreshIndicator(
                         onRefresh: _onRefresh,
                         child: SingleChildScrollView(
@@ -193,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     }
 
-                    final groupedItems = _groupItemsByCategory(state.items);
+                    final groupedItems = _groupItemsByCategory(items);
                     final categories = groupedItems.keys.toList()..sort();
 
                     return RefreshIndicator(
@@ -333,24 +337,35 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ],
                                     ],
                                   ),
-                                  trailing: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        '#${item.id}',
-                                        style: TextStyle(
-                                          color: Colors.grey.shade500,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      if (item.isPurchased)
-                                        Icon(
-                                          Icons.shopping_cart_checkout,
-                                          color: Colors.green,
-                                          size: 16,
-                                        ),
-                                    ],
+                                  trailing: BlocBuilder<ShoppingListBloc, ShoppingListState>(
+                                    builder: (context, state) {
+                                      final isUpdating = state is ShoppingListItemUpdating && 
+                                                        state.updatingItemId == item.id;
+                                      
+                                      return isUpdating 
+                                        ? const SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : Checkbox(
+                                            value: item.isPurchased,
+                                            onChanged: (bool? value) {
+                                              if (value != null) {
+                                                context.read<ShoppingListBloc>().add(
+                                                  MarkItemPurchased(
+                                                    userId: _userId,
+                                                    itemId: item.id,
+                                                    isPurchased: value,
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                            activeColor: Colors.green,
+                                          );
+                                    },
                                   ),
                                 ),
                               )).toList(),

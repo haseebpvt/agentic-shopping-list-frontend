@@ -24,3 +24,18 @@ class RefreshShoppingList extends ShoppingListEvent {
   @override
   List<Object> get props => [userId];
 }
+
+class MarkItemPurchased extends ShoppingListEvent {
+  final String userId;
+  final int itemId;
+  final bool isPurchased;
+
+  const MarkItemPurchased({
+    required this.userId,
+    required this.itemId,
+    required this.isPurchased,
+  });
+
+  @override
+  List<Object> get props => [userId, itemId, isPurchased];
+}

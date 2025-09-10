@@ -14,6 +14,7 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
         super(ShoppingListInitial()) {
     on<LoadShoppingList>(_onLoadShoppingList);
     on<RefreshShoppingList>(_onRefreshShoppingList);
+    on<MarkItemPurchased>(_onMarkItemPurchased);
   }
 
   Future<void> _onLoadShoppingList(
@@ -49,6 +50,47 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
       }
     } catch (e) {
       emit(ShoppingListError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onMarkItemPurchased(
+    MarkItemPurchased event,
+    Emitter<ShoppingListState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is ShoppingListLoaded) {
+      // Show updating state
+      emit(ShoppingListItemUpdating(
+        items: currentState.items,
+        updatingItemId: event.itemId,
+      ));
+
+      try {
+        // Call the API to mark item as purchased
+        await _apiService.markItemPurchased(
+          event.userId,
+          event.itemId,
+          event.isPurchased,
+        );
+
+        // Update the local state immediately for better UX
+        final updatedItems = currentState.items.map((item) {
+          if (item.id == event.itemId) {
+            return item.copyWith(isPurchased: event.isPurchased);
+          }
+          return item;
+        }).toList();
+
+        emit(ShoppingListLoaded(items: updatedItems));
+      } catch (e) {
+        // Revert to previous state on error
+        emit(ShoppingListLoaded(items: currentState.items));
+        emit(ShoppingListError(message: 'Failed to update item: ${e.toString()}'));
+        
+        // Return to loaded state after showing error briefly
+        await Future.delayed(const Duration(seconds: 2));
+        emit(ShoppingListLoaded(items: currentState.items));
+      }
     }
   }
 }

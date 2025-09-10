@@ -16,6 +16,8 @@ abstract class ApiService {
 
   Future<ShoppingListResponse> getShoppingList(String userId);
 
+  Future<Map<String, dynamic>> markItemPurchased(String userId, int itemId, bool isPurchased);
+
   Future<PreferenceListResponse> getPreferenceList(String userId, {String? semanticSearchText});
 
   Future<Map<String, dynamic>> updatePreference(int itemId, String text);
@@ -248,6 +250,39 @@ class ApiServiceImpl implements ApiService {
       return ShoppingListResponse.fromJson(response.data);
     } catch (e) {
       print("❌ Get shopping list failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> markItemPurchased(String userId, int itemId, bool isPurchased) async {
+    print("🔄 Marking item as purchased: userId=$userId, itemId=$itemId, isPurchased=$isPurchased");
+    
+    try {
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "user_id": userId,
+        "item_id": itemId,
+        "is_purchased": isPurchased,
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/shopping_list/mark_purchased");
+      print("📤 Request data: user_id=$userId, item_id=$itemId, is_purchased=$isPurchased");
+
+      final response = await dio.post(
+        "/shopping_list/mark_purchased",
+        data: formData,
+      );
+      
+      print("✅ Mark purchased response: ${response.data}");
+      return response.data;
+    } catch (e) {
+      print("❌ Mark item purchased failed: $e");
       if (e is DioException) {
         print("❌ Error type: ${e.type}");
         print("❌ Error message: ${e.message}");
