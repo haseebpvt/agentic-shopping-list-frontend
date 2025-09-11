@@ -35,6 +35,8 @@ class _CameraAppState extends State<CameraApp> {
       )),
     );
 
+    final LocalShoppingListService localService = LocalShoppingListService();
+
     return MaterialApp(
       home: MultiBlocProvider(
         providers: [
@@ -46,6 +48,9 @@ class _CameraAppState extends State<CameraApp> {
           ),
           BlocProvider(
             create: (context) => PreferenceListBloc(apiService: apiService),
+          ),
+          BlocProvider(
+            create: (context) => LocalShoppingListBloc(service: localService),
           ),
         ],
         child: MainPageView(cameras: _cameras),

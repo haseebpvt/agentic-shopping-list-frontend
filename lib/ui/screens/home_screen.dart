@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:advanced_shopping_list_frontend/core/core.dart';
 import 'package:advanced_shopping_list_frontend/ui/screens/preferences_screen.dart';
+import 'package:advanced_shopping_list_frontend/ui/screens/ai_suggestions_screen.dart';
 import 'package:advanced_shopping_list_frontend/ui/widgets/widgets.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,9 +18,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _messageController = TextEditingController();
   final String _userId = "8"; // For testing purposes, you can make this dynamic later
 
-  /// Groups shopping list items by category
-  Map<String, List<ShoppingListItem>> _groupItemsByCategory(List<ShoppingListItem> items) {
-    final Map<String, List<ShoppingListItem>> groupedItems = {};
+  /// Groups local shopping list items by category
+  Map<String, List<LocalShoppingListItem>> _groupLocalItemsByCategory(List<LocalShoppingListItem> items) {
+    final Map<String, List<LocalShoppingListItem>> groupedItems = {};
     
     for (final item in items) {
       final categoryName = item.categoryName;
@@ -68,8 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Load shopping list when screen initializes
-    context.read<ShoppingListBloc>().add(LoadShoppingList(userId: _userId));
+    // Load local shopping list when screen initializes
+    context.read<LocalShoppingListBloc>().add(LoadLocalShoppingList());
   }
 
   @override
@@ -83,7 +84,35 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _onRefresh() async {
-    context.read<ShoppingListBloc>().add(RefreshShoppingList(userId: _userId));
+    context.read<LocalShoppingListBloc>().add(LoadLocalShoppingList());
+  }
+
+  void _openAiSuggestions() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (newContext) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: context.read<ShoppingListBloc>()),
+            BlocProvider.value(value: context.read<LocalShoppingListBloc>()),
+          ],
+          child: AiSuggestionsScreen(userId: _userId),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showAddItemDialog() async {
+    final item = await showDialog<LocalShoppingListItem>(
+      context: context,
+      builder: (context) => const AddItemDialog(),
+    );
+
+    if (item != null) {
+      context.read<LocalShoppingListBloc>().add(
+        AddLocalShoppingListItem(item: item),
+      );
+    }
   }
 
   void _onSubmitMessage() {
@@ -130,13 +159,84 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            // AI Suggestions Banner
+            Container(
+              margin: const EdgeInsets.all(16),
+              child: Card(
+                elevation: 4,
+                child: InkWell(
+                  onTap: _openAiSuggestions,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.orange.shade400,
+                          Colors.orange.shade600,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.lightbulb,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'AI Suggestions',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Tap to view personalized suggestions',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            
             // Shopping list content
             Expanded(
-              child: BlocBuilder<ShoppingListBloc, ShoppingListState>(
+              child: BlocBuilder<LocalShoppingListBloc, LocalShoppingListState>(
                 builder: (context, state) {
-                  if (state is ShoppingListLoading) {
+                  if (state is LocalShoppingListLoading) {
                     return const ShoppingListShimmer();
-                  } else if (state is ShoppingListError) {
+                  } else if (state is LocalShoppingListError) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -154,29 +254,27 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton(
-                            onPressed: () => context.read<ShoppingListBloc>().add(
-                              LoadShoppingList(userId: _userId),
+                            onPressed: () => context.read<LocalShoppingListBloc>().add(
+                              LoadLocalShoppingList(),
                             ),
                             child: const Text('Retry'),
                           ),
                         ],
                       ),
                     );
-                  } else if (state is ShoppingListLoaded || state is ShoppingListItemUpdating || state is ShoppingListInserting) {
-                    final items = state is ShoppingListLoaded 
+                  } else if (state is LocalShoppingListLoaded || state is LocalShoppingListItemUpdating) {
+                    final items = state is LocalShoppingListLoaded 
                         ? state.items 
-                        : state is ShoppingListItemUpdating
-                        ? (state as ShoppingListItemUpdating).items
-                        : (state as ShoppingListInserting).items;
+                        : (state as LocalShoppingListItemUpdating).items;
                     
                     if (items.isEmpty) {
                       return RefreshIndicator(
                         onRefresh: _onRefresh,
                         child: SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
-                            child: SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.6,
-                              child: const Center(
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.6,
+                            child: const Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -195,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   SizedBox(height: 8),
                                   Text(
-                                    'Pull down to refresh',
+                                    'Add items using the + button below',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey,
@@ -209,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     }
 
-                    final groupedItems = _groupItemsByCategory(items);
+                    final groupedItems = _groupLocalItemsByCategory(items);
                     final categories = groupedItems.keys.toList()..sort();
 
                     return RefreshIndicator(
@@ -349,38 +447,53 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ],
                                     ],
                                   ),
-                                  trailing: BlocBuilder<ShoppingListBloc, ShoppingListState>(
-                                    builder: (context, state) {
-                                      final isUpdating = state is ShoppingListItemUpdating && 
-                                                        state.updatingItemId == item.id;
-                                      
-                                      return isUpdating 
-                                        ? const SizedBox(
-                                            width: 24,
-                                            height: 24,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : Checkbox(
-                                            value: item.isPurchased,
-                                            onChanged: (bool? value) {
-                                              if (value != null) {
-                                                context.read<ShoppingListBloc>().add(
-                                                  MarkItemPurchased(
-                                                    userId: _userId,
-                                                    itemId: item.id,
-                                                    isPurchased: value,
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                            activeColor: Colors.green,
-                                          );
-                                    },
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      BlocBuilder<LocalShoppingListBloc, LocalShoppingListState>(
+                                        builder: (context, state) {
+                                          final isUpdating = state is LocalShoppingListItemUpdating && 
+                                                            state.updatingItemId == item.id!;
+                                          
+                                          return isUpdating 
+                                            ? const SizedBox(
+                                                width: 24,
+                                                height: 24,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                ),
+                                              )
+                                            : Checkbox(
+                                                value: item.isPurchased,
+                                                onChanged: (bool? value) {
+                                                  if (value != null && item.id != null) {
+                                                    context.read<LocalShoppingListBloc>().add(
+                                                      ToggleLocalItemPurchased(
+                                                        id: item.id!,
+                                                        isPurchased: value,
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                                activeColor: Colors.green,
+                                              );
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline),
+                                        onPressed: () {
+                                          if (item.id != null) {
+                                            context.read<LocalShoppingListBloc>().add(
+                                              DeleteLocalShoppingListItem(id: item.id!),
+                                            );
+                                          }
+                                        },
+                                        color: Colors.red.shade400,
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              )).toList(),
+                              )),
                               
                               // Add spacing between categories
                               const SizedBox(height: 16),
@@ -398,78 +511,92 @@ class _HomeScreenState extends State<HomeScreen> {
             // Message field at bottom
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: BlocBuilder<ShoppingListBloc, ShoppingListState>(
-                builder: (context, state) {
-                  final isInserting = state is ShoppingListInserting;
-                  
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(25),
-                      border: Border.all(
-                        color: Colors.grey.shade300,
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        // Text field
-                        Expanded(
-                          child: TextField(
-                            controller: _messageController,
-                            enabled: !isInserting,
-                            decoration: InputDecoration(
-                              hintText: isInserting ? 'Submitting...' : 'Type your message...',
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 16,
-                              ),
-                              suffixIcon: IconButton(
-                                icon: const Icon(Icons.camera_alt, size: 20),
-                                onPressed: isInserting ? null : _onCameraButtonPressed,
-                                color: Theme.of(context).primaryColor,
-                              ),
+              child: Row(
+                children: [
+                  // Text field for AI suggestions
+                  Expanded(
+                    child: BlocBuilder<ShoppingListBloc, ShoppingListState>(
+                      builder: (context, state) {
+                        final isInserting = state is ShoppingListInserting;
+                        
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(25),
+                            border: Border.all(
+                              color: Colors.grey.shade300,
+                              width: 1,
                             ),
-                            maxLines: null,
-                            onSubmitted: isInserting ? null : (_) => _onSubmitMessage(),
                           ),
-                        ),
-                        // Submit button
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: GestureDetector(
-                            onTap: isInserting ? null : _onSubmitMessage,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: isInserting 
-                                    ? Colors.grey.shade400 
-                                    : Theme.of(context).primaryColor,
-                                shape: BoxShape.circle,
-                              ),
-                              child: isInserting
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                      ),
-                                    )
-                                  : const Icon(
-                                      Icons.send,
-                                      color: Colors.white,
-                                      size: 20,
+                          child: Row(
+                            children: [
+                              // Text field
+                              Expanded(
+                                child: TextField(
+                                  controller: _messageController,
+                                  enabled: !isInserting,
+                                  decoration: InputDecoration(
+                                    hintText: isInserting ? 'Getting suggestions...' : 'Ask AI for suggestions...',
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 16,
                                     ),
-                            ),
+                                    suffixIcon: IconButton(
+                                      icon: const Icon(Icons.camera_alt, size: 20),
+                                      onPressed: isInserting ? null : _onCameraButtonPressed,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                  ),
+                                  maxLines: null,
+                                  onSubmitted: isInserting ? null : (_) => _onSubmitMessage(),
+                                ),
+                              ),
+                              // Submit button
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: GestureDetector(
+                                  onTap: isInserting ? null : _onSubmitMessage,
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: isInserting 
+                                          ? Colors.grey.shade400 
+                                          : Theme.of(context).primaryColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: isInserting
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.send,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  );
-                },
+                  ),
+                  const SizedBox(width: 12),
+                  // Add item button
+                  FloatingActionButton(
+                    onPressed: _showAddItemDialog,
+                    backgroundColor: Theme.of(context).primaryColor,
+                    child: const Icon(Icons.add, color: Colors.white),
+                  ),
+                ],
               ),
             ),
           ],
