@@ -18,6 +18,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   CameraController? _controller;
   bool _isInitialized = false;
   bool _isDisposing = false;
+  bool _isCapturing = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -40,7 +41,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized || _isDisposing) {
+    if (controller == null || !controller.value.isInitialized || _isDisposing || _isCapturing) {
       return;
     }
 
@@ -49,7 +50,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         _pauseCamera();
         break;
       case AppLifecycleState.resumed:
-        if (!_isDisposing) {
+        if (!_isDisposing && !_isCapturing) {
           _initializeCamera();
         }
         break;
@@ -91,7 +92,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   }
 
   Future<void> _pauseCamera() async {
-    if (_controller != null && _controller!.value.isInitialized && !_isDisposing) {
+    if (_controller != null && _controller!.value.isInitialized && !_isDisposing && !_isCapturing) {
       await _controller!.dispose();
       if (mounted && !_isDisposing) {
         setState(() {
@@ -225,22 +226,32 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                             state is QuizSubmissionLoading
                         ? null
                         : () async {
+                            if (_isCapturing) return;
+                            
+                            setState(() {
+                              _isCapturing = true;
+                            });
+                            
                             print("📸 Camera button pressed");
                             
                             try {
                               final file = await _controller!.takePicture();
                               print("📸 Picture taken: ${file.path}");
                               
-                              // Pause camera to free up resources before navigation
-                              await _pauseCamera();
-                              
                               if (!mounted) return;
                               
                               // Get the bloc reference before navigation
                               final bloc = context.read<ProductSuggestionBloc>();
                               
-                              // Navigate to photo processing screen
-                              Navigator.of(context).push(
+                              // Start processing the image first
+                              print("📸 Dispatching GetProductSuggestionEvent");
+                              bloc.add(GetProductSuggestionEvent(
+                                userId: "8",
+                                imageFile: file,
+                              ));
+                              
+                              // Navigate to photo processing screen without disposing camera
+                              await Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) => BlocProvider.value(
                                     value: bloc,
@@ -249,19 +260,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                                     ),
                                   ),
                                 ),
-                              ).then((_) {
-                                // Re-initialize camera when returning from photo processing
-                                if (mounted) {
-                                  _initializeCamera();
-                                }
-                              });
+                              );
                               
-                              // Start processing the image
-                              print("📸 Dispatching GetProductSuggestionEvent");
-                              bloc.add(GetProductSuggestionEvent(
-                                userId: "8",
-                                imageFile: file,
-                              ));
+                              // Camera remains active and ready for next capture
                             } catch (e) {
                               print("📸 Error taking picture: $e");
                               if (mounted) {
@@ -271,6 +272,12 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                                     backgroundColor: Colors.red,
                                   ),
                                 );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() {
+                                  _isCapturing = false;
+                                });
                               }
                             }
                           },
