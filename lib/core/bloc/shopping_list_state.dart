@@ -41,3 +41,12 @@ class ShoppingListItemUpdating extends ShoppingListState {
   @override
   List<Object> get props => [items, updatingItemId];
 }
+
+class ShoppingListInserting extends ShoppingListState {
+  final List<ShoppingListItem> items;
+
+  const ShoppingListInserting({required this.items});
+
+  @override
+  List<Object> get props => [items];
+}

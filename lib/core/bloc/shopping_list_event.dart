@@ -39,3 +39,16 @@ class MarkItemPurchased extends ShoppingListEvent {
   @override
   List<Object> get props => [userId, itemId, isPurchased];
 }
+
+class InsertData extends ShoppingListEvent {
+  final String userId;
+  final String userText;
+
+  const InsertData({
+    required this.userId,
+    required this.userText,
+  });
+
+  @override
+  List<Object> get props => [userId, userText];
+}

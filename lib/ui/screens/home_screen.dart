@@ -86,6 +86,16 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<ShoppingListBloc>().add(RefreshShoppingList(userId: _userId));
   }
 
+  void _onSubmitMessage() {
+    final message = _messageController.text.trim();
+    if (message.isNotEmpty) {
+      context.read<ShoppingListBloc>().add(
+        InsertData(userId: _userId, userText: message),
+      );
+      _messageController.clear();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -152,10 +162,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     );
-                  } else if (state is ShoppingListLoaded || state is ShoppingListItemUpdating) {
+                  } else if (state is ShoppingListLoaded || state is ShoppingListItemUpdating || state is ShoppingListInserting) {
                     final items = state is ShoppingListLoaded 
                         ? state.items 
-                        : (state as ShoppingListItemUpdating).items;
+                        : state is ShoppingListItemUpdating
+                        ? (state as ShoppingListItemUpdating).items
+                        : (state as ShoppingListInserting).items;
                     
                     if (items.isEmpty) {
                       return RefreshIndicator(
@@ -386,54 +398,78 @@ class _HomeScreenState extends State<HomeScreen> {
             // Message field at bottom
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(
-                    color: Colors.grey.shade300,
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // Text field
-                    Expanded(
-                      child: TextField(
-                        controller: _messageController,
-                        decoration: const InputDecoration(
-                          hintText: 'Type your message...',
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 16,
-                          ),
-                        ),
-                        maxLines: null,
+              child: BlocBuilder<ShoppingListBloc, ShoppingListState>(
+                builder: (context, state) {
+                  final isInserting = state is ShoppingListInserting;
+                  
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color: Colors.grey.shade300,
+                        width: 1,
                       ),
                     ),
-                    // Camera button
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: GestureDetector(
-                        onTap: _onCameraButtonPressed,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            color: Colors.white,
-                            size: 20,
+                    child: Row(
+                      children: [
+                        // Text field
+                        Expanded(
+                          child: TextField(
+                            controller: _messageController,
+                            enabled: !isInserting,
+                            decoration: InputDecoration(
+                              hintText: isInserting ? 'Submitting...' : 'Type your message...',
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 16,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.camera_alt, size: 20),
+                                onPressed: isInserting ? null : _onCameraButtonPressed,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                            maxLines: null,
+                            onSubmitted: isInserting ? null : (_) => _onSubmitMessage(),
                           ),
                         ),
-                      ),
+                        // Submit button
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: GestureDetector(
+                            onTap: isInserting ? null : _onSubmitMessage,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: isInserting 
+                                    ? Colors.grey.shade400 
+                                    : Theme.of(context).primaryColor,
+                                shape: BoxShape.circle,
+                              ),
+                              child: isInserting
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.send,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           ],

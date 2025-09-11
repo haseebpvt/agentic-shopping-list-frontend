@@ -23,6 +23,8 @@ abstract class ApiService {
   Future<Map<String, dynamic>> updatePreference(int itemId, String text);
 
   Future<Map<String, dynamic>> deletePreference(int itemId);
+
+  Future<Map<String, dynamic>> insertData(String userId, String userText);
 }
 
 class ApiServiceImpl implements ApiService {
@@ -387,6 +389,38 @@ class ApiServiceImpl implements ApiService {
       return response.data;
     } catch (e) {
       print("❌ Delete preference failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> insertData(String userId, String userText) async {
+    print("🔄 Inserting data: userId=$userId, userText=$userText");
+    
+    try {
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "user_id": userId,
+        "user_text": userText,
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/extractor/insert_data");
+      print("📤 Request data: user_id=$userId, user_text=$userText");
+
+      final response = await dio.post(
+        "/extractor/insert_data",
+        data: formData,
+      );
+      
+      print("✅ Insert data response: ${response.data}");
+      return response.data;
+    } catch (e) {
+      print("❌ Insert data failed: $e");
       if (e is DioException) {
         print("❌ Error type: ${e.type}");
         print("❌ Error message: ${e.message}");
