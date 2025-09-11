@@ -95,16 +95,31 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _showAddItemDialog() async {
-    final item = await showDialog<LocalShoppingListItem>(
+  Future<void> _showAddItemBottomSheet({LocalShoppingListItem? item}) async {
+    final result = await showModalBottomSheet<LocalShoppingListItem>(
       context: context,
-      builder: (context) => const AddItemDialog(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: AddEditItemBottomSheet(item: item),
+      ),
     );
 
-    if (item != null) {
-      context.read<LocalShoppingListBloc>().add(
-        AddLocalShoppingListItem(item: item),
-      );
+    if (result != null) {
+      if (item == null) {
+        // Add new item
+        context.read<LocalShoppingListBloc>().add(
+          AddLocalShoppingListItem(item: result),
+        );
+      } else {
+        // Update existing item
+        context.read<LocalShoppingListBloc>().add(
+          UpdateLocalShoppingListItem(item: result),
+        );
+      }
     }
   }
 
@@ -364,6 +379,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 margin: const EdgeInsets.only(bottom: 8),
                                 elevation: 2,
                                 child: ListTile(
+                                  onTap: () => _showAddItemBottomSheet(item: item),
                                   leading: CircleAvatar(
                                     backgroundColor: item.isPurchased 
                                         ? const Color(0xFF4CAF50) 
@@ -501,7 +517,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: const Icon(Icons.camera_alt),
                   ),
                   FloatingActionButton(
-                    onPressed: _showAddItemDialog,
+                    onPressed: () => _showAddItemBottomSheet(),
                     child: const Icon(Icons.add),
                   ),
                 ],

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:advanced_shopping_list_frontend/core/models/model/local_shopping_list/local_shopping_list.dart';
 
-class AddItemDialog extends StatefulWidget {
-  const AddItemDialog({super.key});
+class AddEditItemBottomSheet extends StatefulWidget {
+  final LocalShoppingListItem? item; // null for add mode, item for edit mode
+
+  const AddEditItemBottomSheet({super.key, this.item});
 
   @override
-  State<AddItemDialog> createState() => _AddItemDialogState();
+  State<AddEditItemBottomSheet> createState() => _AddEditItemBottomSheetState();
 }
 
-class _AddItemDialogState extends State<AddItemDialog> {
+class _AddEditItemBottomSheetState extends State<AddEditItemBottomSheet> {
   final _formKey = GlobalKey<FormState>();
   final _itemNameController = TextEditingController();
   final _noteController = TextEditingController();
@@ -16,6 +18,8 @@ class _AddItemDialogState extends State<AddItemDialog> {
   final _unitController = TextEditingController();
   
   String _selectedCategory = 'Groceries';
+  
+  bool get _isEditMode => widget.item != null;
   
   final List<String> _categories = [
     'Groceries',
@@ -29,7 +33,33 @@ class _AddItemDialogState extends State<AddItemDialog> {
     'Toys',
     'Beauty',
     'Food',
+    'Bakery and Desserts',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditMode) {
+      _initializeForEdit();
+    }
+  }
+
+  void _initializeForEdit() {
+    final item = widget.item!;
+    _itemNameController.text = item.itemName;
+    _noteController.text = item.note;
+    _quantityController.text = item.quantity == "Not specified" ? "" : item.quantity;
+    _unitController.text = item.unit;
+    
+    // Check if the item's category exists in our predefined list
+    if (_categories.contains(item.categoryName)) {
+      _selectedCategory = item.categoryName;
+    } else {
+      // If the category doesn't exist, add it to the list
+      _categories.add(item.categoryName);
+      _selectedCategory = item.categoryName;
+    }
+  }
 
   @override
   void dispose() {
@@ -42,15 +72,25 @@ class _AddItemDialogState extends State<AddItemDialog> {
 
   void _saveItem() {
     if (_formKey.currentState!.validate()) {
-      final item = LocalShoppingListItem.fromApiModel(
-        itemName: _itemNameController.text.trim(),
-        note: _noteController.text.trim(),
-        quantity: _quantityController.text.trim().isEmpty 
-            ? 'Not specified' 
-            : _quantityController.text.trim(),
-        unit: _unitController.text.trim(),
-        categoryName: _selectedCategory,
-      );
+      final item = _isEditMode
+          ? widget.item!.copyWith(
+              itemName: _itemNameController.text.trim(),
+              note: _noteController.text.trim(),
+              quantity: _quantityController.text.trim().isEmpty 
+                  ? 'Not specified' 
+                  : _quantityController.text.trim(),
+              unit: _unitController.text.trim(),
+              categoryName: _selectedCategory,
+            )
+          : LocalShoppingListItem.fromApiModel(
+              itemName: _itemNameController.text.trim(),
+              note: _noteController.text.trim(),
+              quantity: _quantityController.text.trim().isEmpty 
+                  ? 'Not specified' 
+                  : _quantityController.text.trim(),
+              unit: _unitController.text.trim(),
+              categoryName: _selectedCategory,
+            );
 
       Navigator.of(context).pop(item);
     }
@@ -58,14 +98,48 @@ class _AddItemDialogState extends State<AddItemDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add New Item'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          
+          // Title
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              _isEditMode ? 'Edit Item' : 'Add New Item',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          
+          // Form content
+          Flexible(
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
               // Item Name
               TextFormField(
                 controller: _itemNameController,
@@ -132,29 +206,61 @@ class _AddItemDialogState extends State<AddItemDialog> {
               ),
               const SizedBox(height: 16),
               
-              // Note
-              TextFormField(
-                controller: _noteController,
-                decoration: const InputDecoration(
-                  labelText: 'Note (Optional)',
-                  border: OutlineInputBorder(),
+                    // Note
+                    TextFormField(
+                      controller: _noteController,
+                      decoration: const InputDecoration(
+                        labelText: 'Note (Optional)',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 2,
+                    ),
+                    
+                    const SizedBox(height: 20),
+                  ],
                 ),
-                maxLines: 2,
               ),
-            ],
+            ),
           ),
-        ),
+          
+          // Action buttons
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border(
+                top: BorderSide(color: Colors.grey[200]!),
+              ),
+            ),
+            child: SafeArea(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: _saveItem,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(_isEditMode ? 'Update Item' : 'Add Item'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _saveItem,
-          child: const Text('Add Item'),
-        ),
-      ],
     );
   }
 }
