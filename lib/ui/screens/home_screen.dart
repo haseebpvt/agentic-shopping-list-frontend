@@ -15,7 +15,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController _messageController = TextEditingController();
   final String _userId = "8"; // For testing purposes, you can make this dynamic later
 
   /// Groups local shopping list items by category
@@ -73,12 +72,6 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<LocalShoppingListBloc>().add(LoadLocalShoppingList());
   }
 
-  @override
-  void dispose() {
-    _messageController.dispose();
-    super.dispose();
-  }
-
   void _onCameraButtonPressed() {
     widget.onPageChange?.call(1);
   }
@@ -115,23 +108,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _onSubmitMessage() {
-    final message = _messageController.text.trim();
-    if (message.isNotEmpty) {
-      context.read<ShoppingListBloc>().add(
-        InsertData(userId: _userId, userText: message),
-      );
-      _messageController.clear();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shopping List'),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.psychology),
@@ -173,8 +154,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                       gradient: LinearGradient(
                         colors: [
-                          Colors.orange.shade400,
-                          Colors.orange.shade600,
+                          Theme.of(context).colorScheme.secondary,
+                          Theme.of(context).colorScheme.secondaryContainer,
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -238,14 +219,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     return const ShoppingListShimmer();
                   } else if (state is LocalShoppingListError) {
                     return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: Colors.red.shade400,
-                          ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 64,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           const SizedBox(height: 16),
                           Text(
                             'Error: ${state.message}',
@@ -274,29 +255,29 @@ class _HomeScreenState extends State<HomeScreen> {
                           physics: const AlwaysScrollableScrollPhysics(),
                           child: SizedBox(
                             height: MediaQuery.of(context).size.height * 0.6,
-                            child: const Center(
+                            child: Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
                                     Icons.shopping_cart_outlined,
                                     size: 64,
-                                    color: Colors.grey,
+                                    color: Theme.of(context).disabledColor,
                                   ),
-                                  SizedBox(height: 16),
+                                  const SizedBox(height: 16),
                                   Text(
                                     'No items in your shopping list',
                                     style: TextStyle(
                                       fontSize: 18,
-                                      color: Colors.grey,
+                                      color: Theme.of(context).disabledColor,
                                     ),
                                   ),
-                                  SizedBox(height: 8),
+                                  const SizedBox(height: 8),
                                   Text(
                                     'Add items using the + button below',
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: Colors.grey,
+                                      color: Theme.of(context).disabledColor,
                                     ),
                                   ),
                                 ],
@@ -385,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: ListTile(
                                   leading: CircleAvatar(
                                     backgroundColor: item.isPurchased 
-                                        ? Colors.green 
+                                        ? const Color(0xFF4CAF50) 
                                         : Theme.of(context).primaryColor,
                                     child: Icon(
                                       item.isPurchased 
@@ -404,7 +385,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ? TextDecoration.lineThrough 
                                           : null,
                                       color: item.isPurchased 
-                                          ? Colors.grey.shade600 
+                                          ? Theme.of(context).disabledColor 
                                           : null,
                                     ),
                                   ),
@@ -416,7 +397,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         Text(
                                           'Note: ${item.note}',
                                           style: TextStyle(
-                                            color: Colors.grey.shade600,
+                                            color: Theme.of(context).hintColor,
                                             fontSize: 14,
                                           ),
                                         ),
@@ -428,7 +409,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             Text(
                                               'Quantity: ${item.quantity}',
                                               style: TextStyle(
-                                                color: Colors.grey.shade600,
+                                                color: Theme.of(context).hintColor,
                                                 fontSize: 14,
                                               ),
                                             ),
@@ -437,7 +418,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               Text(
                                                 item.unit,
                                                 style: TextStyle(
-                                                  color: Colors.grey.shade600,
+                                                  color: Theme.of(context).hintColor,
                                                   fontSize: 14,
                                                 ),
                                               ),
@@ -475,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     );
                                                   }
                                                 },
-                                                activeColor: Colors.green,
+                                                activeColor: const Color(0xFF4CAF50),
                                               );
                                         },
                                       ),
@@ -488,7 +469,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             );
                                           }
                                         },
-                                        color: Colors.red.shade400,
+                                        color: Theme.of(context).colorScheme.error,
                                       ),
                                     ],
                                   ),
@@ -508,93 +489,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-            // Message field at bottom
+            // Camera and Add item buttons at bottom
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Text field for AI suggestions
-                  Expanded(
-                    child: BlocBuilder<ShoppingListBloc, ShoppingListState>(
-                      builder: (context, state) {
-                        final isInserting = state is ShoppingListInserting;
-                        
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(25),
-                            border: Border.all(
-                              color: Colors.grey.shade300,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              // Text field
-                              Expanded(
-                                child: TextField(
-                                  controller: _messageController,
-                                  enabled: !isInserting,
-                                  decoration: InputDecoration(
-                                    hintText: isInserting ? 'Getting suggestions...' : 'Ask AI for suggestions...',
-                                    border: InputBorder.none,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 16,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: const Icon(Icons.camera_alt, size: 20),
-                                      onPressed: isInserting ? null : _onCameraButtonPressed,
-                                      color: Theme.of(context).primaryColor,
-                                    ),
-                                  ),
-                                  maxLines: null,
-                                  onSubmitted: isInserting ? null : (_) => _onSubmitMessage(),
-                                ),
-                              ),
-                              // Submit button
-                              Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: GestureDetector(
-                                  onTap: isInserting ? null : _onSubmitMessage,
-                                  child: Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: isInserting 
-                                          ? Colors.grey.shade400 
-                                          : Theme.of(context).primaryColor,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: isInserting
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                            ),
-                                          )
-                                        : const Icon(
-                                            Icons.send,
-                                            color: Colors.white,
-                                            size: 20,
-                                          ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                  FloatingActionButton(
+                    onPressed: _onCameraButtonPressed,
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    child: const Icon(Icons.camera_alt),
                   ),
-                  const SizedBox(width: 12),
-                  // Add item button
                   FloatingActionButton(
                     onPressed: _showAddItemDialog,
-                    backgroundColor: Theme.of(context).primaryColor,
-                    child: const Icon(Icons.add, color: Colors.white),
+                    child: const Icon(Icons.add),
                   ),
                 ],
               ),

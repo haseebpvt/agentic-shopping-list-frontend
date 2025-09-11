@@ -38,6 +38,10 @@ class _CameraAppState extends State<CameraApp> {
     final LocalShoppingListService localService = LocalShoppingListService();
 
     return MaterialApp(
+      title: 'Shopping List',
+      theme: AppTheme.darkTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.dark,
       home: MultiBlocProvider(
         providers: [
           BlocProvider(

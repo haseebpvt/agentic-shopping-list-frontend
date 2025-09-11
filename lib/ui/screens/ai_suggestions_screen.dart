@@ -13,6 +13,7 @@ class AiSuggestionsScreen extends StatefulWidget {
 }
 
 class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
+  final TextEditingController _messageController = TextEditingController();
   /// Groups shopping list items by category
   Map<String, List<ShoppingListItem>> _groupItemsByCategory(List<ShoppingListItem> items) {
     final Map<String, List<ShoppingListItem>> groupedItems = {};
@@ -68,6 +69,22 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
     context.read<ShoppingListBloc>().add(LoadShoppingList(userId: widget.userId));
   }
 
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  void _onSubmitMessage() {
+    final message = _messageController.text.trim();
+    if (message.isNotEmpty) {
+      context.read<ShoppingListBloc>().add(
+        InsertData(userId: widget.userId, userText: message),
+      );
+      _messageController.clear();
+    }
+  }
+
   Future<void> _onRefresh() async {
     context.read<ShoppingListBloc>().add(RefreshShoppingList(userId: widget.userId));
   }
@@ -88,7 +105,7 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${item.itemName} added to your shopping list'),
-        backgroundColor: Colors.green,
+        backgroundColor: const Color(0xFF4CAF50),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -99,24 +116,26 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI Suggestions'),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
       ),
       body: SafeArea(
-        child: BlocBuilder<ShoppingListBloc, ShoppingListState>(
-          builder: (context, state) {
+        child: Column(
+          children: [
+            // AI suggestions content
+            Expanded(
+              child: BlocBuilder<ShoppingListBloc, ShoppingListState>(
+                builder: (context, state) {
             if (state is ShoppingListLoading) {
               return const ShoppingListShimmer();
             } else if (state is ShoppingListError) {
               return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red.shade400,
-                    ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
                     const SizedBox(height: 16),
                     Text(
                       'Error: ${state.message}',
@@ -147,34 +166,34 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: SizedBox(
                       height: MediaQuery.of(context).size.height * 0.6,
-                      child: const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.lightbulb_outline,
-                              size: 64,
-                              color: Colors.grey,
-                            ),
-                            SizedBox(height: 16),
-                            Text(
-                              'No AI suggestions available',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.lightbulb_outline,
+                                size: 64,
+                                color: Theme.of(context).disabledColor,
                               ),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Pull down to refresh',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
+                              const SizedBox(height: 16),
+                              Text(
+                                'No AI suggestions available',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Theme.of(context).disabledColor,
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              Text(
+                                'Pull down to refresh',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Theme.of(context).disabledColor,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
                     ),
                   ),
                 );
@@ -257,7 +276,7 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                                 elevation: 2,
                                 child: ListTile(
                                   leading: CircleAvatar(
-                                    backgroundColor: Colors.orange,
+                                    backgroundColor: Theme.of(context).colorScheme.secondary,
                                     child: const Icon(
                                       Icons.lightbulb,
                                       color: Colors.white,
@@ -279,7 +298,7 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                                         Text(
                                           'Note: ${item.note}',
                                           style: TextStyle(
-                                            color: Colors.grey.shade600,
+                                            color: Theme.of(context).hintColor,
                                             fontSize: 14,
                                           ),
                                         ),
@@ -291,7 +310,7 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                                             Text(
                                               'Quantity: ${item.quantity}',
                                               style: TextStyle(
-                                                color: Colors.grey.shade600,
+                                                color: Theme.of(context).hintColor,
                                                 fontSize: 14,
                                               ),
                                             ),
@@ -300,7 +319,7 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                                               Text(
                                                 item.unit,
                                                 style: TextStyle(
-                                                  color: Colors.grey.shade600,
+                                                  color: Theme.of(context).hintColor,
                                                   fontSize: 14,
                                                 ),
                                               ),
@@ -329,7 +348,83 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
             }
 
             return const SizedBox.shrink();
-          },
+                },
+              ),
+            ),
+            
+            // AI input field at bottom
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: BlocBuilder<ShoppingListBloc, ShoppingListState>(
+                builder: (context, state) {
+                  final isInserting = state is ShoppingListInserting;
+                  
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color: Theme.of(context).dividerColor,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // Text field
+                        Expanded(
+                          child: TextField(
+                            controller: _messageController,
+                            enabled: !isInserting,
+                            decoration: InputDecoration(
+                              hintText: isInserting ? 'Getting suggestions...' : 'Ask AI for suggestions...',
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 16,
+                              ),
+                            ),
+                            maxLines: null,
+                            onSubmitted: isInserting ? null : (_) => _onSubmitMessage(),
+                          ),
+                        ),
+                        // Submit button
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: GestureDetector(
+                            onTap: isInserting ? null : _onSubmitMessage,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: isInserting 
+                                    ? Theme.of(context).disabledColor 
+                                    : Theme.of(context).primaryColor,
+                                shape: BoxShape.circle,
+                              ),
+                              child: isInserting
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.send,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
