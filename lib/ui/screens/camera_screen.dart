@@ -3,6 +3,7 @@ import 'photo_processing_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CameraScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -13,9 +14,13 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
+class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   CameraController? _controller;
   bool _isInitialized = false;
+  bool _isDisposing = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -26,6 +31,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
   @override
   void dispose() {
+    _isDisposing = true;
     WidgetsBinding.instance.removeObserver(this);
     _controller?.dispose();
     super.dispose();
@@ -34,16 +40,18 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) {
+    if (controller == null || !controller.value.isInitialized || _isDisposing) {
       return;
     }
 
     switch (state) {
       case AppLifecycleState.paused:
-        _controller?.dispose();
+        _pauseCamera();
         break;
       case AppLifecycleState.resumed:
-        _initializeCamera();
+        if (!_isDisposing) {
+          _initializeCamera();
+        }
         break;
       default:
         break;
@@ -51,8 +59,11 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   }
 
   Future<void> _initializeCamera() async {
-    if (widget.cameras.isEmpty) return;
+    if (widget.cameras.isEmpty || _isDisposing) return;
 
+    // Dispose existing controller if any
+    await _controller?.dispose();
+    
     _controller = CameraController(
       widget.cameras[0],
       ResolutionPreset.high,
@@ -61,14 +72,14 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
     try {
       await _controller!.initialize();
-      if (mounted) {
+      if (mounted && !_isDisposing) {
         setState(() {
           _isInitialized = true;
         });
       }
     } catch (e) {
       print('Camera initialization error: $e');
-      if (mounted) {
+      if (mounted && !_isDisposing) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to initialize camera: $e'),
@@ -80,20 +91,52 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   }
 
   Future<void> _pauseCamera() async {
-    if (_controller != null && _controller!.value.isInitialized) {
+    if (_controller != null && _controller!.value.isInitialized && !_isDisposing) {
       await _controller!.dispose();
-      setState(() {
-        _isInitialized = false;
-        _controller = null;
-      });
+      if (mounted && !_isDisposing) {
+        setState(() {
+          _isInitialized = false;
+          _controller = null;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    
     if (!_isInitialized || _controller == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        body: Shimmer.fromColors(
+          baseColor: Colors.grey[900]!,
+          highlightColor: Colors.grey[700]!,
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.grey[900],
+            child: const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.camera_alt,
+                    size: 64,
+                    color: Colors.white24,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Initializing camera...',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       );
     }
 
