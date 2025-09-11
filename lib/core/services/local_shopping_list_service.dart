@@ -20,13 +20,15 @@ class LocalShoppingListService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDatabase,
+      onUpgrade: _upgradeDatabase,
     );
   }
 
   // Create database tables
   Future<void> _createDatabase(Database db, int version) async {
+    // Create the shopping list items table
     await db.execute('''
       CREATE TABLE $_tableName (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,6 +42,29 @@ class LocalShoppingListService {
         updated_at INTEGER
       )
     ''');
+
+    // Create categories table if we're at version 2
+    if (version >= 2) {
+      await db.execute('''
+        CREATE TABLE categories (
+          id INTEGER PRIMARY KEY,
+          name TEXT NOT NULL UNIQUE
+        )
+      ''');
+    }
+  }
+
+  // Upgrade database to add categories table
+  Future<void> _upgradeDatabase(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add categories table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS categories (
+          id INTEGER PRIMARY KEY,
+          name TEXT NOT NULL UNIQUE
+        )
+      ''');
+    }
   }
 
   // Insert new item

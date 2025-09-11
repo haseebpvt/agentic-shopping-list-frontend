@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:advanced_shopping_list_frontend/core/models/model/local_shopping_list/local_shopping_list.dart';
+import 'package:advanced_shopping_list_frontend/core/bloc/category_bloc/category_bloc.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/category/category.dart';
+import 'package:shimmer/shimmer.dart';
 
 class AddEditItemBottomSheet extends StatefulWidget {
   final LocalShoppingListItem? item; // null for add mode, item for edit mode
@@ -17,24 +21,9 @@ class _AddEditItemBottomSheetState extends State<AddEditItemBottomSheet> {
   final _quantityController = TextEditingController();
   final _unitController = TextEditingController();
   
-  String _selectedCategory = 'Groceries';
+  String _selectedCategory = 'Others';
   
   bool get _isEditMode => widget.item != null;
-  
-  final List<String> _categories = [
-    'Groceries',
-    'Electronics',
-    'Clothing',
-    'Health',
-    'Home',
-    'Sports',
-    'Books',
-    'Automotive',
-    'Toys',
-    'Beauty',
-    'Food',
-    'Bakery and Desserts',
-  ];
 
   @override
   void initState() {
@@ -50,14 +39,14 @@ class _AddEditItemBottomSheetState extends State<AddEditItemBottomSheet> {
     _noteController.text = item.note;
     _quantityController.text = item.quantity == "Not specified" ? "" : item.quantity;
     _unitController.text = item.unit;
-    
-    // Check if the item's category exists in our predefined list
-    if (_categories.contains(item.categoryName)) {
-      _selectedCategory = item.categoryName;
-    } else {
-      // If the category doesn't exist, add it to the list
-      _categories.add(item.categoryName);
-      _selectedCategory = item.categoryName;
+    _selectedCategory = item.categoryName;
+  }
+
+  Category? _findCategoryByName(List<Category> categories, String name) {
+    try {
+      return categories.firstWhere((cat) => cat.name == name);
+    } catch (e) {
+      return null;
     }
   }
 
@@ -157,22 +146,106 @@ class _AddEditItemBottomSheetState extends State<AddEditItemBottomSheet> {
               const SizedBox(height: 16),
               
               // Category Dropdown
-              DropdownButtonFormField<String>(
-                initialValue: _selectedCategory,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
-                ),
-                items: _categories.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value!;
-                  });
+              BlocBuilder<CategoryBloc, CategoryState>(
+                builder: (context, state) {
+                  if (state is CategoryLoading) {
+                    return Shimmer.fromColors(
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.grey[100]!,
+                      child: Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey),
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  if (state is CategoryError) {
+                    return Container(
+                      height: 80,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Failed to load categories',
+                            style: TextStyle(color: Colors.red, fontSize: 12),
+                          ),
+                          const SizedBox(height: 4),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              child: Text(
+                                state.error,
+                                style: const TextStyle(
+                                  color: Colors.red, 
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              context.read<CategoryBloc>().add(const RefreshCategories());
+                            },
+                            child: const Text('Retry', style: TextStyle(fontSize: 10)),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  
+                  if (state is CategoryLoaded) {
+                    final categories = state.categories;
+                    
+                    // Ensure selected category exists in the list
+                    if (_isEditMode && _selectedCategory.isNotEmpty) {
+                      final category = _findCategoryByName(categories, _selectedCategory);
+                      if (category == null) {
+                        // Fallback to first category if current doesn't exist
+                        if (categories.isNotEmpty) {
+                          _selectedCategory = categories.first.name;
+                        }
+                      }
+                    } else if (categories.isNotEmpty && _selectedCategory == 'Others') {
+                      // Set default to first category from API
+                      final othersCategory = _findCategoryByName(categories, 'Others');
+                      if (othersCategory != null) {
+                        _selectedCategory = othersCategory.name;
+                      } else {
+                        _selectedCategory = categories.first.name;
+                      }
+                    }
+                    
+                    return DropdownButtonFormField<Category>(
+                      initialValue: _findCategoryByName(categories, _selectedCategory),
+                      decoration: const InputDecoration(
+                        labelText: 'Category',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: categories.map((category) {
+                        return DropdownMenuItem(
+                          value: category,
+                          child: Text(category.name),
+                        );
+                      }).toList(),
+                      onChanged: (Category? value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedCategory = value.name;
+                          });
+                        }
+                      },
+                    );
+                  }
+                  
+                  return const SizedBox.shrink();
                 },
               ),
               const SizedBox(height: 16),

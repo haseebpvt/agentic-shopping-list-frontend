@@ -5,6 +5,7 @@ import 'package:advanced_shopping_list_frontend/core/models/model/product_sugges
 import 'package:advanced_shopping_list_frontend/core/models/model/quiz_resume/quiz_resume.dart';
 import 'package:advanced_shopping_list_frontend/core/models/model/shopping_list/shopping_list.dart';
 import 'package:advanced_shopping_list_frontend/core/models/model/preference_list/preference_list.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/category/category.dart';
 import 'package:advanced_shopping_list_frontend/core/utils/image_compression.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
@@ -25,6 +26,8 @@ abstract class ApiService {
   Future<Map<String, dynamic>> deletePreference(int itemId);
 
   Future<Map<String, dynamic>> insertData(String userId, String userText);
+
+  Future<CategoryResponse> getCategories();
 }
 
 class ApiServiceImpl implements ApiService {
@@ -421,6 +424,26 @@ class ApiServiceImpl implements ApiService {
       return response.data;
     } catch (e) {
       print("❌ Insert data failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CategoryResponse> getCategories() async {
+    try {
+      print("🌐 Making request to: ${dio.options.baseUrl}/category/categories");
+
+      final response = await dio.get("/category/categories");
+      
+      print("✅ Categories response: ${response.data}");
+      return CategoryResponse.fromJson(response.data);
+    } catch (e) {
+      print("❌ Get categories failed: $e");
       if (e is DioException) {
         print("❌ Error type: ${e.type}");
         print("❌ Error message: ${e.message}");

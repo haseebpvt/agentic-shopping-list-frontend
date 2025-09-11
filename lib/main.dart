@@ -1,4 +1,5 @@
 import 'package:advanced_shopping_list_frontend/core/core.dart';
+import 'package:advanced_shopping_list_frontend/core/services/category_service.dart';
 import 'package:advanced_shopping_list_frontend/ui/ui.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
@@ -36,6 +37,7 @@ class _CameraAppState extends State<CameraApp> {
     );
 
     final LocalShoppingListService localService = LocalShoppingListService();
+    final CategoryService categoryService = CategoryService();
 
     return MaterialApp(
       title: 'Shopping List',
@@ -55,6 +57,12 @@ class _CameraAppState extends State<CameraApp> {
           ),
           BlocProvider(
             create: (context) => LocalShoppingListBloc(service: localService),
+          ),
+          BlocProvider(
+            create: (context) => CategoryBloc(
+              apiService: apiService,
+              categoryService: categoryService,
+            )..add(const LoadCategories()),
           ),
         ],
         child: MainPageView(cameras: _cameras),

@@ -100,11 +100,21 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+      builder: (modalContext) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(
+            value: context.read<CategoryBloc>(),
+          ),
+          BlocProvider.value(
+            value: context.read<LocalShoppingListBloc>(),
+          ),
+        ],
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(modalContext).viewInsets.bottom,
+          ),
+          child: AddEditItemBottomSheet(item: item),
         ),
-        child: AddEditItemBottomSheet(item: item),
       ),
     );
 
