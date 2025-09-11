@@ -97,6 +97,7 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
             });
           } else if (state is ProductSuggestionSuccess) {
             // Animate results card when results are ready
+            // Keep quiz card visible if it was already shown
             Future.delayed(const Duration(milliseconds: 300), () {
               if (mounted) {
                 _resultsCardController.forward();
@@ -203,8 +204,9 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
                   child: _buildStatusCard(state),
                 ),
 
-                // Quiz Card (visible when quiz is required)
-                if (state is ProductSuggestionQuizRequired) ...[
+                // Quiz Card (visible when quiz is required or completed)
+                if (state is ProductSuggestionQuizRequired || 
+                    (state is ProductSuggestionSuccess && _quizCardController.isCompleted)) ...[
                   const SizedBox(height: 12),
                   SlideTransition(
                     position: _quizCardAnimation,
@@ -298,13 +300,12 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
     );
   }
 
-  Widget _buildQuizCard(ProductSuggestionQuizRequired state) {
-    return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Container(
+  Widget _buildQuizCard(ProductSuggestionState state) {
+    // For ProductSuggestionSuccess state, we need to get the quiz data from the previous state
+    // This is a simplified approach - in a real app you might want to store this data separately
+    if (state is! ProductSuggestionQuizRequired) {
+      // If we're in success state but quiz was completed, show a completed state
+      return Container(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.5,
         ),
@@ -317,12 +318,12 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
               Row(
                 children: [
                   Icon(
-                    Icons.quiz_outlined,
-                    color: Theme.of(context).primaryColor,
+                    Icons.check_circle_outlined,
+                    color: Colors.green,
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    "Additional Information",
+                    "Quiz Completed",
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -330,29 +331,64 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
                 ],
               ),
               const SizedBox(height: 16),
-              Flexible(
-                child: QuizWidget(
-                  questions: state.quizQuestions,
-                  onQuizCompleted: (data) {
-                    final questionAndAnswers = data.map((item) {
-                      return "${item.question}: ${item.selectedAnswer}";
-                    }).toList();
-
-                    print("📝 Submitting quiz with ${questionAndAnswers.length} answers");
-                    print("📝 Thread ID: ${state.threadId}");
-                    context.read<ProductSuggestionBloc>().add(
-                          SubmitQuizEvent(
-                            quizRequest: QuizResumeRequest(
-                              threadId: state.threadId,
-                              questionAndAnswers: questionAndAnswers,
-                            ),
-                          ),
-                        );
-                  },
-                ),
+              Text(
+                "Thank you for providing additional information. Your responses have been processed.",
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],
           ),
+        ),
+      );
+    }
+    
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.5,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.quiz_outlined,
+                  color: Theme.of(context).primaryColor,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  "Additional Information",
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Flexible(
+              child: QuizWidget(
+                questions: (state as ProductSuggestionQuizRequired).quizQuestions,
+                onQuizCompleted: (data) {
+                  final questionAndAnswers = data.map((item) {
+                    return "${item.question}: ${item.selectedAnswer}";
+                  }).toList();
+
+                  print("📝 Submitting quiz with ${questionAndAnswers.length} answers");
+                  print("📝 Thread ID: ${(state as ProductSuggestionQuizRequired).threadId}");
+                  context.read<ProductSuggestionBloc>().add(
+                    SubmitQuizEvent(
+                      quizRequest: QuizResumeRequest(
+                        threadId: (state as ProductSuggestionQuizRequired).threadId,
+                        questionAndAnswers: questionAndAnswers,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
