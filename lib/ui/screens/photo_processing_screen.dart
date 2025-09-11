@@ -345,51 +345,32 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.5,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.quiz_outlined,
-                  color: Theme.of(context).primaryColor,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  "Additional Information",
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Flexible(
-              child: QuizWidget(
-                questions: (state as ProductSuggestionQuizRequired).quizQuestions,
-                onQuizCompleted: (data) {
-                  final questionAndAnswers = data.map((item) {
-                    return "${item.question}: ${item.selectedAnswer}";
-                  }).toList();
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Flexible(
+            child: QuizWidget(
+              questions: (state as ProductSuggestionQuizRequired).quizQuestions,
+              onQuizCompleted: (data) {
+                final questionAndAnswers = data.map((item) {
+                  return "${item.question}: ${item.selectedAnswer}";
+                }).toList();
 
-                  print("📝 Submitting quiz with ${questionAndAnswers.length} answers");
-                  print("📝 Thread ID: ${(state as ProductSuggestionQuizRequired).threadId}");
-                  context.read<ProductSuggestionBloc>().add(
-                    SubmitQuizEvent(
-                      quizRequest: QuizResumeRequest(
-                        threadId: (state as ProductSuggestionQuizRequired).threadId,
-                        questionAndAnswers: questionAndAnswers,
-                      ),
+                print("📝 Submitting quiz with ${questionAndAnswers.length} answers");
+                print("📝 Thread ID: ${(state as ProductSuggestionQuizRequired).threadId}");
+                context.read<ProductSuggestionBloc>().add(
+                  SubmitQuizEvent(
+                    quizRequest: QuizResumeRequest(
+                      threadId: (state as ProductSuggestionQuizRequired).threadId,
+                      questionAndAnswers: questionAndAnswers,
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
