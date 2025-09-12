@@ -28,6 +28,7 @@ mixin _$ProductSuggestion {
   Quiz? get quiz => throw _privateConstructorUsedError;
   @JsonKey(name: 'products')
   List<Product>? get products => throw _privateConstructorUsedError;
+  dynamic get suggestion => throw _privateConstructorUsedError;
 
   /// Serializes this ProductSuggestion to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -52,6 +53,7 @@ abstract class $ProductSuggestionCopyWith<$Res> {
     @JsonKey(name: 'thread_id') String? threadId,
     Quiz? quiz,
     @JsonKey(name: 'products') List<Product>? products,
+    dynamic suggestion,
   });
 
   $QuizCopyWith<$Res>? get quiz;
@@ -77,6 +79,7 @@ class _$ProductSuggestionCopyWithImpl<$Res, $Val extends ProductSuggestion>
     Object? threadId = freezed,
     Object? quiz = freezed,
     Object? products = freezed,
+    Object? suggestion = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -100,6 +103,10 @@ class _$ProductSuggestionCopyWithImpl<$Res, $Val extends ProductSuggestion>
                 ? _value.products
                 : products // ignore: cast_nullable_to_non_nullable
                       as List<Product>?,
+            suggestion: freezed == suggestion
+                ? _value.suggestion
+                : suggestion // ignore: cast_nullable_to_non_nullable
+                      as dynamic,
           )
           as $Val,
     );
@@ -135,6 +142,7 @@ abstract class _$$ProductSuggestionImplCopyWith<$Res>
     @JsonKey(name: 'thread_id') String? threadId,
     Quiz? quiz,
     @JsonKey(name: 'products') List<Product>? products,
+    dynamic suggestion,
   });
 
   @override
@@ -160,6 +168,7 @@ class __$$ProductSuggestionImplCopyWithImpl<$Res>
     Object? threadId = freezed,
     Object? quiz = freezed,
     Object? products = freezed,
+    Object? suggestion = freezed,
   }) {
     return _then(
       _$ProductSuggestionImpl(
@@ -183,6 +192,10 @@ class __$$ProductSuggestionImplCopyWithImpl<$Res>
             ? _value._products
             : products // ignore: cast_nullable_to_non_nullable
                   as List<Product>?,
+        suggestion: freezed == suggestion
+            ? _value.suggestion
+            : suggestion // ignore: cast_nullable_to_non_nullable
+                  as dynamic,
       ),
     );
   }
@@ -197,6 +210,7 @@ class _$ProductSuggestionImpl implements _ProductSuggestion {
     @JsonKey(name: 'thread_id') this.threadId,
     this.quiz,
     @JsonKey(name: 'products') final List<Product>? products,
+    this.suggestion,
   }) : _products = products;
 
   factory _$ProductSuggestionImpl.fromJson(Map<String, dynamic> json) =>
@@ -223,8 +237,11 @@ class _$ProductSuggestionImpl implements _ProductSuggestion {
   }
 
   @override
+  final dynamic suggestion;
+
+  @override
   String toString() {
-    return 'ProductSuggestion(type: $type, message: $message, threadId: $threadId, quiz: $quiz, products: $products)';
+    return 'ProductSuggestion(type: $type, message: $message, threadId: $threadId, quiz: $quiz, products: $products, suggestion: $suggestion)';
   }
 
   @override
@@ -237,7 +254,11 @@ class _$ProductSuggestionImpl implements _ProductSuggestion {
             (identical(other.threadId, threadId) ||
                 other.threadId == threadId) &&
             (identical(other.quiz, quiz) || other.quiz == quiz) &&
-            const DeepCollectionEquality().equals(other._products, _products));
+            const DeepCollectionEquality().equals(other._products, _products) &&
+            const DeepCollectionEquality().equals(
+              other.suggestion,
+              suggestion,
+            ));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -249,6 +270,7 @@ class _$ProductSuggestionImpl implements _ProductSuggestion {
     threadId,
     quiz,
     const DeepCollectionEquality().hash(_products),
+    const DeepCollectionEquality().hash(suggestion),
   );
 
   /// Create a copy of ProductSuggestion
@@ -275,6 +297,7 @@ abstract class _ProductSuggestion implements ProductSuggestion {
     @JsonKey(name: 'thread_id') final String? threadId,
     final Quiz? quiz,
     @JsonKey(name: 'products') final List<Product>? products,
+    final dynamic suggestion,
   }) = _$ProductSuggestionImpl;
 
   factory _ProductSuggestion.fromJson(Map<String, dynamic> json) =
@@ -292,6 +315,8 @@ abstract class _ProductSuggestion implements ProductSuggestion {
   @override
   @JsonKey(name: 'products')
   List<Product>? get products;
+  @override
+  dynamic get suggestion;
 
   /// Create a copy of ProductSuggestion
   /// with the given fields replaced by the non-null parameter values.

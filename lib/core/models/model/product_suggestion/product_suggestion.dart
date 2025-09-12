@@ -11,6 +11,7 @@ class ProductSuggestion with _$ProductSuggestion {
     @JsonKey(name: 'thread_id') String? threadId,
     Quiz? quiz,
     @JsonKey(name: 'products') List<Product>? products,
+    dynamic suggestion, // Added to handle suggestion field from API
   }) = _ProductSuggestion;
 
   factory ProductSuggestion.fromJson(Map<String, dynamic> json) =>

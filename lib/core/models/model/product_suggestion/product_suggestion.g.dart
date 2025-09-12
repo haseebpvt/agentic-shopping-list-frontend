@@ -18,6 +18,7 @@ _$ProductSuggestionImpl _$$ProductSuggestionImplFromJson(
   products: (json['products'] as List<dynamic>?)
       ?.map((e) => Product.fromJson(e as Map<String, dynamic>))
       .toList(),
+  suggestion: json['suggestion'],
 );
 
 Map<String, dynamic> _$$ProductSuggestionImplToJson(
@@ -28,6 +29,7 @@ Map<String, dynamic> _$$ProductSuggestionImplToJson(
   'thread_id': instance.threadId,
   'quiz': instance.quiz,
   'products': instance.products,
+  'suggestion': instance.suggestion,
 };
 
 _$QuizImpl _$$QuizImplFromJson(Map<String, dynamic> json) => _$QuizImpl(

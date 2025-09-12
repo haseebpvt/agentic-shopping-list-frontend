@@ -288,12 +288,51 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
             // Use repaint boundary to isolate loading indicator animation
             RepaintBoundary(
               child: isLoading
-                  ? const Padding(
-                      padding: EdgeInsets.only(right: 16.0),
-                      child: SizedBox(
+                  ? Padding(
+                      padding: const EdgeInsets.only(right: 16.0),
+                      child: Container(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.grey[300]!,
+                              Colors.grey[100]!,
+                              Colors.grey[300]!,
+                            ],
+                            stops: const [0.0, 0.5, 1.0],
+                          ),
+                        ),
+                        child: TweenAnimationBuilder<double>(
+                          duration: const Duration(milliseconds: 1200),
+                          tween: Tween(begin: -1.0, end: 1.0),
+                          builder: (context, value, child) {
+                            return Transform.translate(
+                              offset: Offset(value * 24, 0),
+                              child: Container(
+                                width: 12,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(6),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.transparent,
+                                      Colors.white.withOpacity(0.6),
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          onEnd: () {
+                            // Restart the animation for shimmer effect
+                            if (mounted && isLoading) {
+                              setState(() {});
+                            }
+                          },
+                        ),
                       ),
                     )
                   : Padding(

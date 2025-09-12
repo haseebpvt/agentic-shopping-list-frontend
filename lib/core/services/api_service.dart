@@ -148,16 +148,11 @@ class ApiServiceImpl implements ApiService {
                 'type': json['type']?.toString() ?? '',
                 'message': json['message']?.toString() ?? '',
                 'thread_id': json['thread_id']?.toString(),
-                if (json['quiz'] != null) 'quiz': json['quiz'],
+                if (json['quiz'] != null) 'quiz': _castToStringDynamic(json['quiz']),
                 // Handle both direct products array and nested suggestion structure
-                if (json['products'] != null) 'products': json['products'],
-                // Include any other fields that might be present
-                ...json.entries
-                    .where((entry) => !['type', 'message', 'thread_id', 'quiz', 'products'].contains(entry.key))
-                    .fold<Map<String, dynamic>>({}, (acc, entry) => {
-                  ...acc,
-                  entry.key.toString(): entry.value,
-                }),
+                if (json['products'] != null) 'products': _castToStringDynamicList(json['products']),
+                // Handle suggestion field from API (always include since model expects it)
+                'suggestion': json['suggestion'],
               };
               
               final result = ProductSuggestion.fromJson(sanitizedJson);
@@ -196,16 +191,11 @@ class ApiServiceImpl implements ApiService {
           'type': json['type']?.toString() ?? '',
           'message': json['message']?.toString() ?? '',
           'thread_id': json['thread_id']?.toString(),
-          if (json['quiz'] != null) 'quiz': json['quiz'],
+          if (json['quiz'] != null) 'quiz': _castToStringDynamic(json['quiz']),
           // Handle both direct products array and nested suggestion structure
-          if (json['products'] != null) 'products': json['products'],
-          // Include any other fields that might be present
-          ...json.entries
-              .where((entry) => !['type', 'message', 'thread_id', 'quiz', 'products'].contains(entry.key))
-              .fold<Map<String, dynamic>>({}, (acc, entry) => {
-            ...acc,
-            entry.key.toString(): entry.value,
-          }),
+          if (json['products'] != null) 'products': _castToStringDynamicList(json['products']),
+          // Handle suggestion field from API (always include since model expects it)
+          'suggestion': json['suggestion'],
         };
         
         final result = ProductSuggestion.fromJson(sanitizedJson);
@@ -519,6 +509,36 @@ class ApiServiceImpl implements ApiService {
         print("❌ Response: ${e.response?.data}");
       }
       rethrow;
+    }
+  }
+
+  // Helper method to cast dynamic map to Map<String, dynamic>
+  Map<String, dynamic> _castToStringDynamic(dynamic map) {
+    if (map is Map<String, dynamic>) {
+      return map;
+    } else if (map is Map) {
+      return Map<String, dynamic>.from(map);
+    } else {
+      throw ArgumentError('Cannot cast $map to Map<String, dynamic>');
+    }
+  }
+
+  // Helper method to cast dynamic list to List<Map<String, dynamic>>
+  List<Map<String, dynamic>> _castToStringDynamicList(dynamic list) {
+    if (list is List<Map<String, dynamic>>) {
+      return list;
+    } else if (list is List) {
+      return list.map((item) {
+        if (item is Map<String, dynamic>) {
+          return item;
+        } else if (item is Map) {
+          return Map<String, dynamic>.from(item);
+        } else {
+          throw ArgumentError('Cannot cast list item $item to Map<String, dynamic>');
+        }
+      }).toList();
+    } else {
+      throw ArgumentError('Cannot cast $list to List<Map<String, dynamic>>');
     }
   }
 }
