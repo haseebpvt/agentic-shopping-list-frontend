@@ -72,10 +72,10 @@ class PreferenceListBloc extends Bloc<PreferenceListEvent, PreferenceListState> 
     }
   }
 
-  void _onSearchPreferences(
+  Future<void> _onSearchPreferences(
     SearchPreferences event,
     Emitter<PreferenceListState> emit,
-  ) {
+  ) async {
     // Cancel previous timer
     _debounceTimer?.cancel();
     
@@ -88,10 +88,24 @@ class PreferenceListBloc extends Bloc<PreferenceListEvent, PreferenceListState> 
     // Set searching state immediately
     emit(PreferenceListSearching(searchQuery: event.searchQuery));
     
+    // Create a completer to properly handle the async operation
+    final completer = Completer<void>();
+    
     // Set up debounce timer
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      _performSearch(event.userId, event.searchQuery, emit);
+      _performSearch(event.userId, event.searchQuery, emit).then((_) {
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      }).catchError((error) {
+        if (!completer.isCompleted) {
+          completer.completeError(error);
+        }
+      });
     });
+    
+    // Wait for the debounced operation to complete
+    await completer.future;
   }
 
   Future<void> _performSearch(
