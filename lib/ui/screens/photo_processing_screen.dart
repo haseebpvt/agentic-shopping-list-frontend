@@ -5,6 +5,7 @@ import '../widgets/suggested_product_view.dart';
 import 'package:animated_quiz_widget/quiz_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 
 class PhotoProcessingScreen extends StatefulWidget {
   final String imagePath;
@@ -290,48 +291,13 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
               child: isLoading
                   ? Padding(
                       padding: const EdgeInsets.only(right: 16.0),
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.grey[300]!,
-                              Colors.grey[100]!,
-                              Colors.grey[300]!,
-                            ],
-                            stops: const [0.0, 0.5, 1.0],
-                          ),
-                        ),
-                        child: TweenAnimationBuilder<double>(
-                          duration: const Duration(milliseconds: 1200),
-                          tween: Tween(begin: -1.0, end: 1.0),
-                          builder: (context, value, child) {
-                            return Transform.translate(
-                              offset: Offset(value * 24, 0),
-                              child: Container(
-                                width: 12,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(6),
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.transparent,
-                                      Colors.white.withOpacity(0.6),
-                                      Colors.transparent,
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                          onEnd: () {
-                            // Restart the animation for shimmer effect
-                            if (mounted && isLoading) {
-                              setState(() {});
-                            }
-                          },
+                      child: SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: Lottie.asset(
+                          'assets/ai_loading.json',
+                          repeat: true,
+                          animate: true,
                         ),
                       ),
                     )
