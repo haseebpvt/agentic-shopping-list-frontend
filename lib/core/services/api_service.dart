@@ -140,8 +140,25 @@ class ApiServiceImpl implements ApiService {
               print("🔄 Processing JSON: $jsonStr");
               final json = jsonDecode(jsonStr);
               print("🔄 Decoded JSON: $json");
-              final result = ProductSuggestion.fromJson(json);
-              print("✅ Successfully parsed: type=${result.type}, message=${result.message}, threadId=${result.threadId}");
+              
+              // Ensure we have the minimum required fields with defaults
+              final sanitizedJson = <String, dynamic>{
+                'type': json['type']?.toString() ?? '',
+                'message': json['message']?.toString() ?? '',
+                'thread_id': json['thread_id']?.toString(),
+                if (json['quiz'] != null) 'quiz': json['quiz'],
+                if (json['suggestion'] != null) 'suggestion': json['suggestion'],
+                // Include any other fields that might be present
+                ...json.entries
+                    .where((entry) => !['type', 'message', 'thread_id', 'quiz', 'suggestion'].contains(entry.key))
+                    .fold<Map<String, dynamic>>({}, (acc, entry) => {
+                  ...acc,
+                  entry.key.toString(): entry.value,
+                }),
+              };
+              
+              final result = ProductSuggestion.fromJson(sanitizedJson);
+              print("✅ Successfully parsed: type='${result.type}', message='${result.message}', threadId=${result.threadId}");
               if (result.quiz != null) {
                 print("✅ Quiz data present: ${result.quiz!.quiz?.length ?? 0} questions");
               }
@@ -170,8 +187,25 @@ class ApiServiceImpl implements ApiService {
         print("🔄 Processing final buffer: ${buffer.trim()}");
         final json = jsonDecode(buffer.trim());
         print("🔄 Final decoded JSON: $json");
-        final result = ProductSuggestion.fromJson(json);
-        print("✅ Successfully parsed final: type=${result.type}, message=${result.message}, threadId=${result.threadId}");
+        
+        // Ensure we have the minimum required fields with defaults
+        final sanitizedJson = <String, dynamic>{
+          'type': json['type']?.toString() ?? '',
+          'message': json['message']?.toString() ?? '',
+          'thread_id': json['thread_id']?.toString(),
+          if (json['quiz'] != null) 'quiz': json['quiz'],
+          if (json['suggestion'] != null) 'suggestion': json['suggestion'],
+          // Include any other fields that might be present
+          ...json.entries
+              .where((entry) => !['type', 'message', 'thread_id', 'quiz', 'suggestion'].contains(entry.key))
+              .fold<Map<String, dynamic>>({}, (acc, entry) => {
+            ...acc,
+            entry.key.toString(): entry.value,
+          }),
+        };
+        
+        final result = ProductSuggestion.fromJson(sanitizedJson);
+        print("✅ Successfully parsed final: type='${result.type}', message='${result.message}', threadId=${result.threadId}");
         yield result;
       } catch (bufferError) {
         print("❌ Error parsing final buffer: $bufferError");

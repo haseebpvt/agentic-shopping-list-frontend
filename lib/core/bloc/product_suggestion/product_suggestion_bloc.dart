@@ -52,17 +52,46 @@ class ProductSuggestionBloc extends Bloc<ProductSuggestionEvent, ProductSuggesti
               threadId: data.threadId ?? "",
               message: data.message,
             );
-          } else if (data.type == "suggestion" && data.suggestion?.products != null) {
-            // Direct suggestions without quiz
+          } else if (data.suggestion?.products != null && data.suggestion!.products!.isNotEmpty) {
+            // Direct suggestions without quiz or after quiz completion
             print("📡 Found ${data.suggestion!.products!.length} products");
             return ProductSuggestionSuccess(
               products: data.suggestion!.products!,
-              message: data.message,
+              message: data.message.isNotEmpty ? data.message : "Analysis complete!",
             );
           } else {
             // Stream update - show the message in loading state
-            print("📡 Stream update: ${data.message}");
-            return ProductSuggestionLoading(message: data.message);
+            // Handle custom stream messages that may not have explicit type
+            String displayMessage = data.message.trim();
+            
+            // If message is empty, try to extract meaningful info from other fields
+            if (displayMessage.isEmpty) {
+              if (data.type.isNotEmpty) {
+                // Convert type to readable message
+                switch (data.type.toLowerCase()) {
+                  case 'image_analysis':
+                    displayMessage = "Analyzing image...";
+                    break;
+                  case 'product_extraction':
+                    displayMessage = "Extracting products...";
+                    break;
+                  case 'preference_matching':
+                    displayMessage = "Matching preferences...";
+                    break;
+                  case 'generating_suggestions':
+                    displayMessage = "Generating suggestions...";
+                    break;
+                  default:
+                    displayMessage = data.type.replaceAll('_', ' ').toLowerCase();
+                    displayMessage = displayMessage[0].toUpperCase() + displayMessage.substring(1) + "...";
+                }
+              } else {
+                displayMessage = "Processing image...";
+              }
+            }
+            
+            print("📡 Stream update: type='${data.type}', message='$displayMessage'");
+            return ProductSuggestionLoading(message: displayMessage);
           }
         },
         onError: (error, stackTrace) {
