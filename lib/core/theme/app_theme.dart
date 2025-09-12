@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Dark theme colors
-  static const Color primaryColor = Color(0xFF2196F3); // Blue
+  // Light theme colors - White theme
+  static const Color primaryColor = Color(0xFF2196F3); // Blue (keeping accent)
   static const Color primaryVariant = Color(0xFF1976D2); // Darker blue
-  static const Color secondary = Color(0xFFFF9800); // Orange
+  static const Color secondary = Color(0xFFFF9800); // Orange (keeping accent)
   static const Color secondaryVariant = Color(0xFFF57C00); // Darker orange
-  static const Color surface = Color(0xFF1E1E1E); // Dark surface
-  static const Color background = Color(0xFF121212); // Dark background
-  static const Color error = Color(0xFFCF6679); // Error red
+  static const Color surface = Colors.white; // White surface
+  static const Color background = Colors.white; // White background
+  static const Color error = Color(0xFFD32F2F); // Error red
   static const Color onPrimary = Colors.white;
-  static const Color onSecondary = Colors.black;
-  static const Color onSurface = Colors.white;
-  static const Color onBackground = Colors.white;
-  static const Color onError = Colors.black;
+  static const Color onSecondary = Colors.white;
+  static const Color onSurface = Colors.black87;
+  static const Color onBackground = Colors.black87;
+  static const Color onError = Colors.white;
 
   // Additional colors for the shopping app
-  static const Color cardColor = Color(0xFF2D2D2D);
-  static const Color dividerColor = Color(0xFF404040);
-  static const Color hintColor = Color(0xFF9E9E9E);
-  static const Color disabledColor = Color(0xFF616161);
+  static const Color cardColor = Colors.white;
+  static const Color dividerColor = Color(0xFFE0E0E0);
+  static const Color hintColor = Color(0xFF757575);
+  static const Color disabledColor = Color(0xFFBDBDBD);
   static const Color successColor = Color(0xFF4CAF50);
   static const Color warningColor = Color(0xFFFF9800);
 
-  static ThemeData get darkTheme {
+  static ThemeData get lightTheme {
     return ThemeData(
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       primarySwatch: Colors.blue,
       primaryColor: primaryColor,
       scaffoldBackgroundColor: background,
@@ -36,7 +36,7 @@ class AppTheme {
       disabledColor: disabledColor,
       
       // ColorScheme for Material 3
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: primaryColor,
         primaryContainer: primaryVariant,
         secondary: secondary,
@@ -53,23 +53,24 @@ class AppTheme {
 
       // AppBar theme
       appBarTheme: const AppBarTheme(
-        backgroundColor: primaryColor,
-        foregroundColor: onPrimary,
-        elevation: 4,
+        backgroundColor: Colors.white,
+        foregroundColor: onSurface,
+        elevation: 1,
         centerTitle: false,
         titleTextStyle: TextStyle(
-          color: onPrimary,
+          color: onSurface,
           fontSize: 20,
           fontWeight: FontWeight.w500,
         ),
-        iconTheme: IconThemeData(color: onPrimary),
-        actionsIconTheme: IconThemeData(color: onPrimary),
+        iconTheme: IconThemeData(color: onSurface),
+        actionsIconTheme: IconThemeData(color: onSurface),
       ),
 
       // Card theme
       cardTheme: CardThemeData(
         color: cardColor,
-        elevation: 4,
+        elevation: 2,
+        shadowColor: Colors.black12,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -107,7 +108,7 @@ class AppTheme {
       // Input decoration theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surface,
+        fillColor: Colors.grey[50],
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: dividerColor),
@@ -181,11 +182,13 @@ class AppTheme {
         selectedItemColor: primaryColor,
         unselectedItemColor: hintColor,
         type: BottomNavigationBarType.fixed,
+        elevation: 8,
       ),
 
       // Dialog theme
       dialogTheme: DialogThemeData(
         backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -201,9 +204,9 @@ class AppTheme {
       ),
 
       // Snackbar theme
-      snackBarTheme: const SnackBarThemeData(
-        backgroundColor: surface,
-        contentTextStyle: TextStyle(color: onSurface),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: Colors.grey[800],
+        contentTextStyle: const TextStyle(color: Colors.white),
         actionTextColor: primaryColor,
       ),
 

@@ -126,12 +126,12 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     if (!_isInitialized || _controller == null) {
       return Scaffold(
         body: Shimmer.fromColors(
-          baseColor: Colors.grey[900]!,
-          highlightColor: Colors.grey[700]!,
+          baseColor: Colors.grey[300]!,
+          highlightColor: Colors.grey[100]!,
           child: Container(
             width: double.infinity,
             height: double.infinity,
-            color: Colors.grey[900],
+            color: Colors.grey[100],
             child: const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -319,8 +319,8 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                         size: 40,
                         color: state is ProductSuggestionLoading ||
                                 state is QuizSubmissionLoading
-                            ? Colors.grey[600]
-                            : Colors.black87,
+                            ? Theme.of(context).disabledColor
+                            : Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                   ),

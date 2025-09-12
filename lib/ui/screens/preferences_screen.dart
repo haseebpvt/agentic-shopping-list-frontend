@@ -163,23 +163,10 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                             color: isOperationInProgress ? Colors.grey : null,
                           ),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '#${item.id}',
-                              style: TextStyle(
-                                color: Colors.grey.shade500,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              Icons.edit,
-                              color: Colors.grey.shade400,
-                              size: 16,
-                            ),
-                          ],
+                        trailing: Icon(
+                          Icons.edit,
+                          color: Colors.grey.shade400,
+                          size: 16,
                         ),
                         contentPadding: const EdgeInsets.all(16),
                         onTap: isOperationInProgress ? null : () => _editPreference(item),
@@ -213,8 +200,6 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Preferences'),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
       ),
       body: Column(
         children: [
