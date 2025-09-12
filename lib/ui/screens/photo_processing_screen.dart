@@ -126,8 +126,8 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.2),
-                    Colors.black.withOpacity(0.6),
+                    Colors.black.withOpacity(0.1),
+                    Colors.black.withOpacity(0.3),
                   ],
                 ),
               ),
@@ -157,7 +157,7 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
           errorBuilder: (context, error, stackTrace) {
             print('Error loading background image: $error');
             return Container(
-              color: Colors.grey[300],
+              color: Colors.grey[100],
               child: const Center(
                 child: Icon(
                   Icons.image_not_supported,
@@ -185,7 +185,7 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
           },
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.6),
+              color: Colors.black.withOpacity(0.3),
               borderRadius: BorderRadius.circular(25),
             ),
             child: const Padding(
