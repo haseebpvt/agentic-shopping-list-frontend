@@ -124,11 +124,11 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
   Future<List<Category>> _loadFromApi() async {
     print("🌐 CategoryBloc: Calling API service...");
     final response = await apiService.getCategories();
-    print("✅ CategoryBloc: API response received with ${response.data.length} categories");
+    print("✅ CategoryBloc: API response received with ${response.data.categories.length} categories");
     print("🔄 CategoryBloc: Saving to local database...");
-    await categoryService.saveCategories(response.data);
+    await categoryService.saveCategories(response.data.categories);
     print("✅ CategoryBloc: Categories saved to local database");
-    return response.data;
+    return response.data.categories;
   }
 
   Future<void> _loadFromApiInBackground() async {

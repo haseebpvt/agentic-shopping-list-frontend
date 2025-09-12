@@ -12,6 +12,7 @@ class LocalShoppingListItem with _$LocalShoppingListItem {
     required String quantity,
     required String unit,
     required String categoryName,
+    int? categoryId, // API category ID
     @Default(false) bool isPurchased,
     required DateTime createdAt,
     DateTime? updatedAt,
@@ -47,6 +48,7 @@ class LocalShoppingListItem with _$LocalShoppingListItem {
       quantity: map['quantity'] as String,
       unit: map['unit'] as String,
       categoryName: map['category_name'] as String,
+      categoryId: map['category_id'] as int?,
       isPurchased: (map['is_purchased'] as int) == 1,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
       updatedAt: map['updated_at'] != null 
@@ -66,6 +68,7 @@ extension LocalShoppingListItemExtension on LocalShoppingListItem {
       'quantity': quantity,
       'unit': unit,
       'category_name': categoryName,
+      'category_id': categoryId,
       'is_purchased': isPurchased ? 1 : 0,
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': updatedAt?.millisecondsSinceEpoch,

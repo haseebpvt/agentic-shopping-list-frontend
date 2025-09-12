@@ -7,12 +7,22 @@ part 'category.g.dart';
 class CategoryResponse with _$CategoryResponse {
   const factory CategoryResponse({
     required bool success,
-    required List<Category> data,
+    required CategoryData data,
     String? error,
   }) = _CategoryResponse;
 
   factory CategoryResponse.fromJson(Map<String, dynamic> json) =>
       _$CategoryResponseFromJson(json);
+}
+
+@freezed
+class CategoryData with _$CategoryData {
+  const factory CategoryData({
+    required List<Category> categories,
+  }) = _CategoryData;
+
+  factory CategoryData.fromJson(Map<String, dynamic> json) =>
+      _$CategoryDataFromJson(json);
 }
 
 @freezed

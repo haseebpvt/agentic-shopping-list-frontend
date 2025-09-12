@@ -20,7 +20,7 @@ class LocalShoppingListService {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDatabase,
       onUpgrade: _upgradeDatabase,
     );
@@ -37,6 +37,7 @@ class LocalShoppingListService {
         quantity TEXT NOT NULL,
         unit TEXT NOT NULL,
         category_name TEXT NOT NULL,
+        category_id INTEGER,
         is_purchased INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER
@@ -54,7 +55,7 @@ class LocalShoppingListService {
     }
   }
 
-  // Upgrade database to add categories table
+  // Upgrade database to add categories table and category_id column
   Future<void> _upgradeDatabase(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       // Add categories table
@@ -63,6 +64,13 @@ class LocalShoppingListService {
           id INTEGER PRIMARY KEY,
           name TEXT NOT NULL UNIQUE
         )
+      ''');
+    }
+    
+    if (oldVersion < 3) {
+      // Add category_id column to existing items table
+      await db.execute('''
+        ALTER TABLE $_tableName ADD COLUMN category_id INTEGER
       ''');
     }
   }
@@ -157,6 +165,55 @@ class LocalShoppingListService {
     );
 
     return maps.map((map) => LocalShoppingListItem.fromDbMap(map)).toList();
+  }
+
+  // Get items without category IDs (for background processing)
+  Future<List<LocalShoppingListItem>> getItemsWithoutCategoryId() async {
+    final db = await database;
+    final maps = await db.query(
+      _tableName,
+      where: 'category_id IS NULL',
+      orderBy: 'created_at DESC',
+    );
+
+    return maps.map((map) => LocalShoppingListItem.fromDbMap(map)).toList();
+  }
+
+  // Update item's category ID
+  Future<LocalShoppingListItem> updateItemCategoryId(int itemId, int categoryId, String categoryName) async {
+    final db = await database;
+    final now = DateTime.now();
+    
+    await db.update(
+      _tableName,
+      {
+        'category_id': categoryId,
+        'category_name': categoryName,
+        'updated_at': now.millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [itemId],
+    );
+
+    // Get the updated item
+    final maps = await db.query(
+      _tableName,
+      where: 'id = ?',
+      whereArgs: [itemId],
+    );
+
+    return LocalShoppingListItem.fromDbMap(maps.first);
+  }
+
+  // Store category in local database
+  Future<void> storeCategory(int categoryId, String categoryName) async {
+    final db = await database;
+    
+    await db.insert(
+      'categories',
+      {'id': categoryId, 'name': categoryName},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   // Close database

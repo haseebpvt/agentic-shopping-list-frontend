@@ -15,6 +15,7 @@ _$LocalShoppingListItemImpl _$$LocalShoppingListItemImplFromJson(
   quantity: json['quantity'] as String,
   unit: json['unit'] as String,
   categoryName: json['categoryName'] as String,
+  categoryId: (json['categoryId'] as num?)?.toInt(),
   isPurchased: json['isPurchased'] as bool? ?? false,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: json['updatedAt'] == null
@@ -31,6 +32,7 @@ Map<String, dynamic> _$$LocalShoppingListItemImplToJson(
   'quantity': instance.quantity,
   'unit': instance.unit,
   'categoryName': instance.categoryName,
+  'categoryId': instance.categoryId,
   'isPurchased': instance.isPurchased,
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt?.toIso8601String(),

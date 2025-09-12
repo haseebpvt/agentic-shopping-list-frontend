@@ -70,6 +70,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // Load local shopping list when screen initializes
     context.read<LocalShoppingListBloc>().add(LoadLocalShoppingList());
+    // Check for uncategorized items and identify them
+    context.read<LocalShoppingListBloc>().add(IdentifyUncategorizedItems());
   }
 
   void _onCameraButtonPressed() {
@@ -78,6 +80,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _onRefresh() async {
     context.read<LocalShoppingListBloc>().add(LoadLocalShoppingList());
+    // Also check for uncategorized items on refresh
+    context.read<LocalShoppingListBloc>().add(IdentifyUncategorizedItems());
   }
 
   void _openAiSuggestions() {
@@ -132,6 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -314,7 +319,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
 
                     final groupedItems = _groupLocalItemsByCategory(items);
-                    final categories = groupedItems.keys.toList()..sort();
+                    final categories = groupedItems.keys.toList();
+                    
+                    // Sort categories with "Other" at the top
+                    categories.sort((a, b) {
+                      if (a.toLowerCase() == 'other' || a.toLowerCase() == 'others') return -1;
+                      if (b.toLowerCase() == 'other' || b.toLowerCase() == 'others') return 1;
+                      return a.compareTo(b);
+                    });
 
                     return RefreshIndicator(
                       onRefresh: _onRefresh,

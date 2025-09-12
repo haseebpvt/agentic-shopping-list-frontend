@@ -29,6 +29,7 @@ mixin _$LocalShoppingListItem {
   String get quantity => throw _privateConstructorUsedError;
   String get unit => throw _privateConstructorUsedError;
   String get categoryName => throw _privateConstructorUsedError;
+  int? get categoryId => throw _privateConstructorUsedError; // API category ID
   bool get isPurchased => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime? get updatedAt => throw _privateConstructorUsedError;
@@ -57,6 +58,7 @@ abstract class $LocalShoppingListItemCopyWith<$Res> {
     String quantity,
     String unit,
     String categoryName,
+    int? categoryId,
     bool isPurchased,
     DateTime createdAt,
     DateTime? updatedAt,
@@ -87,6 +89,7 @@ class _$LocalShoppingListItemCopyWithImpl<
     Object? quantity = null,
     Object? unit = null,
     Object? categoryName = null,
+    Object? categoryId = freezed,
     Object? isPurchased = null,
     Object? createdAt = null,
     Object? updatedAt = freezed,
@@ -117,6 +120,10 @@ class _$LocalShoppingListItemCopyWithImpl<
                 ? _value.categoryName
                 : categoryName // ignore: cast_nullable_to_non_nullable
                       as String,
+            categoryId: freezed == categoryId
+                ? _value.categoryId
+                : categoryId // ignore: cast_nullable_to_non_nullable
+                      as int?,
             isPurchased: null == isPurchased
                 ? _value.isPurchased
                 : isPurchased // ignore: cast_nullable_to_non_nullable
@@ -151,6 +158,7 @@ abstract class _$$LocalShoppingListItemImplCopyWith<$Res>
     String quantity,
     String unit,
     String categoryName,
+    int? categoryId,
     bool isPurchased,
     DateTime createdAt,
     DateTime? updatedAt,
@@ -178,6 +186,7 @@ class __$$LocalShoppingListItemImplCopyWithImpl<$Res>
     Object? quantity = null,
     Object? unit = null,
     Object? categoryName = null,
+    Object? categoryId = freezed,
     Object? isPurchased = null,
     Object? createdAt = null,
     Object? updatedAt = freezed,
@@ -208,6 +217,10 @@ class __$$LocalShoppingListItemImplCopyWithImpl<$Res>
             ? _value.categoryName
             : categoryName // ignore: cast_nullable_to_non_nullable
                   as String,
+        categoryId: freezed == categoryId
+            ? _value.categoryId
+            : categoryId // ignore: cast_nullable_to_non_nullable
+                  as int?,
         isPurchased: null == isPurchased
             ? _value.isPurchased
             : isPurchased // ignore: cast_nullable_to_non_nullable
@@ -235,6 +248,7 @@ class _$LocalShoppingListItemImpl implements _LocalShoppingListItem {
     required this.quantity,
     required this.unit,
     required this.categoryName,
+    this.categoryId,
     this.isPurchased = false,
     required this.createdAt,
     this.updatedAt,
@@ -257,6 +271,9 @@ class _$LocalShoppingListItemImpl implements _LocalShoppingListItem {
   @override
   final String categoryName;
   @override
+  final int? categoryId;
+  // API category ID
+  @override
   @JsonKey()
   final bool isPurchased;
   @override
@@ -266,7 +283,7 @@ class _$LocalShoppingListItemImpl implements _LocalShoppingListItem {
 
   @override
   String toString() {
-    return 'LocalShoppingListItem(id: $id, itemName: $itemName, note: $note, quantity: $quantity, unit: $unit, categoryName: $categoryName, isPurchased: $isPurchased, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'LocalShoppingListItem(id: $id, itemName: $itemName, note: $note, quantity: $quantity, unit: $unit, categoryName: $categoryName, categoryId: $categoryId, isPurchased: $isPurchased, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -283,6 +300,8 @@ class _$LocalShoppingListItemImpl implements _LocalShoppingListItem {
             (identical(other.unit, unit) || other.unit == unit) &&
             (identical(other.categoryName, categoryName) ||
                 other.categoryName == categoryName) &&
+            (identical(other.categoryId, categoryId) ||
+                other.categoryId == categoryId) &&
             (identical(other.isPurchased, isPurchased) ||
                 other.isPurchased == isPurchased) &&
             (identical(other.createdAt, createdAt) ||
@@ -301,6 +320,7 @@ class _$LocalShoppingListItemImpl implements _LocalShoppingListItem {
     quantity,
     unit,
     categoryName,
+    categoryId,
     isPurchased,
     createdAt,
     updatedAt,
@@ -332,6 +352,7 @@ abstract class _LocalShoppingListItem implements LocalShoppingListItem {
     required final String quantity,
     required final String unit,
     required final String categoryName,
+    final int? categoryId,
     final bool isPurchased,
     required final DateTime createdAt,
     final DateTime? updatedAt,
@@ -352,6 +373,8 @@ abstract class _LocalShoppingListItem implements LocalShoppingListItem {
   String get unit;
   @override
   String get categoryName;
+  @override
+  int? get categoryId; // API category ID
   @override
   bool get isPurchased;
   @override

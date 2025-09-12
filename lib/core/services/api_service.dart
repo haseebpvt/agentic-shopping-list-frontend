@@ -28,6 +28,8 @@ abstract class ApiService {
   Future<Map<String, dynamic>> insertData(String userId, String userText);
 
   Future<CategoryResponse> getCategories();
+
+  Future<CategoryResponse> identifyCategory(String itemName);
 }
 
 class ApiServiceImpl implements ApiService {
@@ -478,6 +480,37 @@ class ApiServiceImpl implements ApiService {
       return CategoryResponse.fromJson(response.data);
     } catch (e) {
       print("❌ Get categories failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CategoryResponse> identifyCategory(String itemName) async {
+    try {
+      print("🔄 Identifying category for item: $itemName");
+      
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "item_name": itemName,
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/category/identify");
+      print("📤 Request data: item_name=$itemName");
+
+      final response = await dio.get(
+        "/category/identify",
+        data: formData,
+      );
+      
+      print("✅ Category identification response: ${response.data}");
+      return CategoryResponse.fromJson(response.data);
+    } catch (e) {
+      print("❌ Category identification failed: $e");
       if (e is DioException) {
         print("❌ Error type: ${e.type}");
         print("❌ Error message: ${e.message}");
