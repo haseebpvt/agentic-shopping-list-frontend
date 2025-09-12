@@ -137,6 +137,256 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Builds an animated category list that smoothly handles reordering
+  Widget _buildAnimatedCategoryList({
+    required Map<String, List<LocalShoppingListItem>> groupedItems,
+    required List<String> categories,
+    required bool isReordering,
+  }) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 500),
+      switchInCurve: Curves.easeInOut,
+      switchOutCurve: Curves.easeInOut,
+      child: ListView.builder(
+        key: ValueKey(categories.join('_')), // Key changes when categories change order
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: categories.length,
+        itemBuilder: (context, categoryIndex) {
+          final category = categories[categoryIndex];
+          final categoryItems = groupedItems[category]!;
+          
+          return AnimatedContainer(
+            duration: Duration(milliseconds: isReordering ? 400 : 200),
+            curve: Curves.easeInOut,
+            child: _buildCategorySection(
+              category: category,
+              categoryItems: categoryItems,
+              isReordering: isReordering,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Builds a single category section with its items
+  Widget _buildCategorySection({
+    required String category,
+    required List<LocalShoppingListItem> categoryItems,
+    required bool isReordering,
+  }) {
+    return Column(
+      key: ValueKey('category_$category'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Category header
+        AnimatedContainer(
+          duration: Duration(milliseconds: isReordering ? 300 : 150),
+          curve: Curves.easeInOut,
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Theme.of(context).primaryColor.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _getCategoryIcon(category),
+                color: Theme.of(context).primaryColor,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                category,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+              const Spacer(),
+              AnimatedContainer(
+                duration: Duration(milliseconds: isReordering ? 300 : 150),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${categoryItems.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        // Category items with animation
+        ...categoryItems.map((item) => _buildAnimatedListItem(
+          item: item,
+          isReordering: isReordering,
+        )),
+        
+        // Add spacing between categories
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  /// Builds an animated list item
+  Widget _buildAnimatedListItem({
+    required LocalShoppingListItem item,
+    required bool isReordering,
+  }) {
+    return AnimatedContainer(
+      key: ValueKey('item_${item.id}'),
+      duration: Duration(milliseconds: isReordering ? 400 : 200),
+      curve: Curves.easeInOut,
+      margin: const EdgeInsets.only(bottom: 8),
+      child: TweenAnimationBuilder<double>(
+        duration: Duration(milliseconds: isReordering ? 400 : 200),
+        tween: Tween<double>(begin: isReordering ? 0.8 : 1.0, end: 1.0),
+        curve: Curves.easeInOut,
+        builder: (context, scale, child) {
+          return Transform.scale(
+            scale: scale,
+            child: Card(
+              elevation: 2,
+              child: ListTile(
+                onTap: () => _showAddItemBottomSheet(item: item),
+                leading: CircleAvatar(
+                  backgroundColor: item.isPurchased 
+                      ? const Color(0xFF4CAF50) 
+                      : Theme.of(context).primaryColor,
+                  child: Icon(
+                    item.isPurchased 
+                        ? Icons.check 
+                        : Icons.shopping_basket,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  item.itemName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    decoration: item.isPurchased 
+                        ? TextDecoration.lineThrough 
+                        : null,
+                    color: item.isPurchased 
+                        ? Theme.of(context).disabledColor 
+                        : null,
+                  ),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (item.note.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Note: ${item.note}',
+                        style: TextStyle(
+                          color: Theme.of(context).hintColor,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                    if (item.quantity.isNotEmpty && item.quantity != "Not specified") ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            'Quantity: ${item.quantity}',
+                            style: TextStyle(
+                              color: Theme.of(context).hintColor,
+                              fontSize: 14,
+                            ),
+                          ),
+                          if (item.unit.isNotEmpty) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              item.unit,
+                              style: TextStyle(
+                                color: Theme.of(context).hintColor,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    BlocBuilder<LocalShoppingListBloc, LocalShoppingListState>(
+                      builder: (context, state) {
+                        final isUpdating = state is LocalShoppingListItemUpdating && 
+                                          state.updatingItemId == item.id!;
+                        
+                        return isUpdating 
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Checkbox(
+                              value: item.isPurchased,
+                              onChanged: (bool? value) {
+                                if (value != null && item.id != null) {
+                                  context.read<LocalShoppingListBloc>().add(
+                                    ToggleLocalItemPurchased(
+                                      id: item.id!,
+                                      isPurchased: value,
+                                    ),
+                                  );
+                                }
+                              },
+                              activeColor: const Color(0xFF4CAF50),
+                            );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () {
+                        if (item.id != null) {
+                          context.read<LocalShoppingListBloc>().add(
+                            DeleteLocalShoppingListItem(id: item.id!),
+                          );
+                        }
+                      },
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -273,10 +523,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     );
-                  } else if (state is LocalShoppingListLoaded || state is LocalShoppingListItemUpdating) {
+                  } else if (state is LocalShoppingListLoaded || 
+                           state is LocalShoppingListItemUpdating || 
+                           state is LocalShoppingListReordering) {
                     final items = state is LocalShoppingListLoaded 
                         ? state.items 
-                        : (state as LocalShoppingListItemUpdating).items;
+                        : state is LocalShoppingListItemUpdating
+                          ? state.items
+                          : (state as LocalShoppingListReordering).newItems;
                     
                     if (items.isEmpty) {
                       return RefreshIndicator(
@@ -330,195 +584,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     return RefreshIndicator(
                       onRefresh: _onRefresh,
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(16),
-                        itemCount: categories.length,
-                        itemBuilder: (context, categoryIndex) {
-                          final category = categories[categoryIndex];
-                          final categoryItems = groupedItems[category]!;
-                          
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Category header
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                margin: const EdgeInsets.only(bottom: 8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).primaryColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Theme.of(context).primaryColor.withOpacity(0.3),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      _getCategoryIcon(category),
-                                      color: Theme.of(context).primaryColor,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      category,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).primaryColor,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).primaryColor,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        '${categoryItems.length}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              
-                              // Category items
-                              ...categoryItems.map((item) => Card(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                elevation: 2,
-                                child: ListTile(
-                                  onTap: () => _showAddItemBottomSheet(item: item),
-                                  leading: CircleAvatar(
-                                    backgroundColor: item.isPurchased 
-                                        ? const Color(0xFF4CAF50) 
-                                        : Theme.of(context).primaryColor,
-                                    child: Icon(
-                                      item.isPurchased 
-                                          ? Icons.check 
-                                          : Icons.shopping_basket,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  title: Text(
-                                    item.itemName,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      decoration: item.isPurchased 
-                                          ? TextDecoration.lineThrough 
-                                          : null,
-                                      color: item.isPurchased 
-                                          ? Theme.of(context).disabledColor 
-                                          : null,
-                                    ),
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      if (item.note.isNotEmpty) ...[
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Note: ${item.note}',
-                                          style: TextStyle(
-                                            color: Theme.of(context).hintColor,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ],
-                                      if (item.quantity.isNotEmpty && item.quantity != "Not specified") ...[
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            Text(
-                                              'Quantity: ${item.quantity}',
-                                              style: TextStyle(
-                                                color: Theme.of(context).hintColor,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                            if (item.unit.isNotEmpty) ...[
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                item.unit,
-                                                style: TextStyle(
-                                                  color: Theme.of(context).hintColor,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      BlocBuilder<LocalShoppingListBloc, LocalShoppingListState>(
-                                        builder: (context, state) {
-                                          final isUpdating = state is LocalShoppingListItemUpdating && 
-                                                            state.updatingItemId == item.id!;
-                                          
-                                          return isUpdating 
-                                            ? const SizedBox(
-                                                width: 24,
-                                                height: 24,
-                                                child: CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                ),
-                                              )
-                                            : Checkbox(
-                                                value: item.isPurchased,
-                                                onChanged: (bool? value) {
-                                                  if (value != null && item.id != null) {
-                                                    context.read<LocalShoppingListBloc>().add(
-                                                      ToggleLocalItemPurchased(
-                                                        id: item.id!,
-                                                        isPurchased: value,
-                                                      ),
-                                                    );
-                                                  }
-                                                },
-                                                activeColor: const Color(0xFF4CAF50),
-                                              );
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete_outline),
-                                        onPressed: () {
-                                          if (item.id != null) {
-                                            context.read<LocalShoppingListBloc>().add(
-                                              DeleteLocalShoppingListItem(id: item.id!),
-                                            );
-                                          }
-                                        },
-                                        color: Theme.of(context).colorScheme.error,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )),
-                              
-                              // Add spacing between categories
-                              const SizedBox(height: 16),
-                            ],
-                          );
-                        },
+                      child: _buildAnimatedCategoryList(
+                        groupedItems: groupedItems, 
+                        categories: categories,
+                        isReordering: state is LocalShoppingListReordering,
                       ),
                     );
                   }

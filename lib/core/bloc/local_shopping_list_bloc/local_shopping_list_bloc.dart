@@ -56,6 +56,8 @@ class ClearPurchasedLocalItems extends LocalShoppingListEvent {}
 
 class IdentifyUncategorizedItems extends LocalShoppingListEvent {}
 
+class LoadLocalShoppingListWithAnimation extends LocalShoppingListEvent {}
+
 
 // States
 abstract class LocalShoppingListState extends Equatable {
@@ -100,6 +102,19 @@ class LocalShoppingListItemUpdating extends LocalShoppingListState {
   List<Object?> get props => [items, updatingItemId];
 }
 
+class LocalShoppingListReordering extends LocalShoppingListState {
+  final List<LocalShoppingListItem> oldItems;
+  final List<LocalShoppingListItem> newItems;
+
+  const LocalShoppingListReordering({
+    required this.oldItems,
+    required this.newItems,
+  });
+
+  @override
+  List<Object?> get props => [oldItems, newItems];
+}
+
 // Bloc
 class LocalShoppingListBloc extends Bloc<LocalShoppingListEvent, LocalShoppingListState> {
   final LocalShoppingListService _service;
@@ -123,11 +138,54 @@ class LocalShoppingListBloc extends Bloc<LocalShoppingListEvent, LocalShoppingLi
     on<ToggleLocalItemPurchased>(_onToggleLocalItemPurchased);
     on<ClearPurchasedLocalItems>(_onClearPurchasedLocalItems);
     on<IdentifyUncategorizedItems>(_onIdentifyUncategorizedItems);
+    on<LoadLocalShoppingListWithAnimation>(_onLoadLocalShoppingListWithAnimation);
   }
 
   /// Callback method for when categories are updated in the background
   void _onCategoryUpdated() {
-    add(LoadLocalShoppingList());
+    // Use the event system instead of calling emit directly
+    add(LoadLocalShoppingListWithAnimation());
+  }
+
+  /// Groups items by category name for comparison
+  Map<String, List<LocalShoppingListItem>> _groupItemsByCategory(List<LocalShoppingListItem> items) {
+    final Map<String, List<LocalShoppingListItem>> groupedItems = {};
+    
+    for (final item in items) {
+      final categoryName = item.categoryName;
+      if (groupedItems[categoryName] == null) {
+        groupedItems[categoryName] = [];
+      }
+      groupedItems[categoryName]!.add(item);
+    }
+    
+    return groupedItems;
+  }
+
+  /// Checks if there's significant reordering that warrants animation
+  bool _hasSignificantReordering(
+    Map<String, List<LocalShoppingListItem>> oldGrouping,
+    Map<String, List<LocalShoppingListItem>> newGrouping,
+  ) {
+    // Check if any items changed categories
+    for (final item in oldGrouping.values.expand((list) => list)) {
+      final oldCategory = item.categoryName;
+      
+      // Find this item in new grouping
+      String? newCategory;
+      for (final entry in newGrouping.entries) {
+        if (entry.value.any((newItem) => newItem.id == item.id)) {
+          newCategory = entry.key;
+          break;
+        }
+      }
+      
+      if (newCategory != null && newCategory != oldCategory) {
+        return true; // Item changed category
+      }
+    }
+    
+    return false;
   }
 
   Future<void> _onLoadLocalShoppingList(
@@ -232,6 +290,47 @@ class LocalShoppingListBloc extends Bloc<LocalShoppingListEvent, LocalShoppingLi
     } catch (e) {
       // Don't emit error state for this background operation
       print("❌ Error identifying uncategorized items: $e");
+    }
+  }
+
+  Future<void> _onLoadLocalShoppingListWithAnimation(
+    LoadLocalShoppingListWithAnimation event,
+    Emitter<LocalShoppingListState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is LocalShoppingListLoaded) {
+      try {
+        final newItems = await _service.getAllItems();
+        
+        // Only emit reordering state if items actually changed positions
+        final oldGrouping = _groupItemsByCategory(currentState.items);
+        final newGrouping = _groupItemsByCategory(newItems);
+        
+        // Check if category grouping has changed
+        bool hasReordering = _hasSignificantReordering(oldGrouping, newGrouping);
+        
+        if (hasReordering) {
+          // Emit reordering state to trigger smooth animations
+          emit(LocalShoppingListReordering(
+            oldItems: currentState.items,
+            newItems: newItems,
+          ));
+          
+          // After a brief delay, emit the final loaded state
+          await Future.delayed(const Duration(milliseconds: 600));
+          emit(LocalShoppingListLoaded(items: newItems));
+        } else {
+          // No significant changes, just update directly
+          emit(LocalShoppingListLoaded(items: newItems));
+        }
+      } catch (e) {
+        // On error, just reload normally
+        emit(LocalShoppingListError(message: e.toString()));
+      }
+    } else {
+      // Not in loaded state, just reload normally
+      final items = await _service.getAllItems();
+      emit(LocalShoppingListLoaded(items: items));
     }
   }
 
