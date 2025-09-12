@@ -27,6 +27,9 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
   late Animation<Offset> _statusCardAnimation;
   late Animation<Offset> _quizCardAnimation;
   late Animation<Offset> _resultsCardAnimation;
+  
+  // Cache the image widget to prevent repeated file reads
+  Widget? _cachedBackgroundImage;
 
   @override
   void initState() {
@@ -73,6 +76,9 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
 
     // Start with status card animation
     _statusCardController.forward();
+    
+    // Pre-create and cache the background image widget
+    _cachedBackgroundImage = _createBackgroundImage();
   }
 
   @override
@@ -80,6 +86,8 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
     _statusCardController.dispose();
     _quizCardController.dispose();
     _resultsCardController.dispose();
+    // Clear the cached image widget
+    _cachedBackgroundImage = null;
     super.dispose();
   }
 
@@ -107,8 +115,8 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
         },
         child: Stack(
           children: [
-            // Full screen background image
-            _buildBackgroundImage(),
+            // Full screen background image (cached)
+            _cachedBackgroundImage ?? Container(),
             
             // Dark overlay for better card visibility
             Container(
@@ -135,23 +143,30 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
     );
   }
 
-  Widget _buildBackgroundImage() {
+  Widget _createBackgroundImage() {
     return Positioned.fill(
-      child: Image.file(
-        File(widget.imagePath),
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: Colors.grey[300],
-            child: const Center(
-              child: Icon(
-                Icons.image_not_supported,
-                size: 64,
-                color: Colors.grey,
+      child: RepaintBoundary(
+        child: Image.file(
+          File(widget.imagePath),
+          fit: BoxFit.cover,
+          // Add cacheWidth and cacheHeight to optimize memory usage and prevent buffer overflow
+          cacheWidth: 1080, // Reduced from 1920 to further optimize memory
+          cacheHeight: 720, // Reduced from 1080 to further optimize memory
+          filterQuality: FilterQuality.medium, // Balance quality and performance
+          errorBuilder: (context, error, stackTrace) {
+            print('Error loading background image: $error');
+            return Container(
+              color: Colors.grey[300],
+              child: const Center(
+                child: Icon(
+                  Icons.image_not_supported,
+                  size: 64,
+                  color: Colors.grey,
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -188,6 +203,16 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
 
   Widget _buildProgressiveCards() {
     return BlocBuilder<ProductSuggestionBloc, ProductSuggestionState>(
+      buildWhen: (previous, current) {
+        // Only rebuild when the state type changes or when transitioning to/from certain states
+        if (previous.runtimeType != current.runtimeType) return true;
+        if (current is ProductSuggestionLoading && previous is ProductSuggestionLoading) {
+          // For loading states, only rebuild if the message changes significantly
+          // to avoid constant rebuilds during streaming updates
+          return current.message != previous.message;
+        }
+        return true;
+      },
       builder: (context, state) {
         return Positioned(
           left: 0,
@@ -260,32 +285,34 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
         padding: const EdgeInsets.all(20.0),
         child: Row(
           children: [
-            if (isLoading)
-              const Padding(
-                padding: EdgeInsets.only(right: 16.0),
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Icon(
-                  state is ProductSuggestionError 
-                      ? Icons.error_outline 
-                      : state is ProductSuggestionSuccess
-                          ? Icons.check_circle_outline
-                          : Icons.help_outline,
-                  color: state is ProductSuggestionError 
-                      ? Colors.red 
-                      : state is ProductSuggestionSuccess
-                          ? Colors.green
-                          : Theme.of(context).primaryColor,
-                  size: 24,
-                ),
-              ),
+            // Use repaint boundary to isolate loading indicator animation
+            RepaintBoundary(
+              child: isLoading
+                  ? const Padding(
+                      padding: EdgeInsets.only(right: 16.0),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(right: 16.0),
+                      child: Icon(
+                        state is ProductSuggestionError 
+                            ? Icons.error_outline 
+                            : state is ProductSuggestionSuccess
+                                ? Icons.check_circle_outline
+                                : Icons.help_outline,
+                        color: state is ProductSuggestionError 
+                            ? Colors.red 
+                            : state is ProductSuggestionSuccess
+                                ? Colors.green
+                                : Theme.of(context).primaryColor,
+                        size: 24,
+                      ),
+                    ),
+            ),
             Expanded(
               child: Text(
                 message,

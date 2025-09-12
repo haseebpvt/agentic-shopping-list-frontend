@@ -14,27 +14,34 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
   CameraController? _controller;
   bool _isInitialized = false;
   bool _isDisposing = false;
   bool _isCapturing = false;
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeCamera();
+    // Add a small delay to ensure proper initialization
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_isDisposing) {
+        _initializeCamera();
+      }
+    });
   }
 
   @override
   void dispose() {
     _isDisposing = true;
     WidgetsBinding.instance.removeObserver(this);
-    _controller?.dispose();
+    _controller?.dispose().timeout(
+      const Duration(seconds: 2),
+      onTimeout: () {
+        print('Camera disposal timed out, forcing disposal');
+      },
+    );
     super.dispose();
   }
 
@@ -67,8 +74,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     
     _controller = CameraController(
       widget.cameras[0],
-      ResolutionPreset.high,
+      ResolutionPreset.medium, // Use medium resolution to reduce buffer usage
       enableAudio: false, // Disable audio to reduce resource usage
+      imageFormatGroup: ImageFormatGroup.jpeg, // Use JPEG for smaller file sizes
     );
 
     try {
@@ -93,7 +101,16 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
   Future<void> _pauseCamera() async {
     if (_controller != null && _controller!.value.isInitialized && !_isDisposing && !_isCapturing) {
-      await _controller!.dispose();
+      try {
+        await _controller!.dispose().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () {
+            print('Camera pause disposal timed out');
+          },
+        );
+      } catch (e) {
+        print('Error disposing camera: $e');
+      }
       if (mounted && !_isDisposing) {
         setState(() {
           _isInitialized = false;
@@ -105,7 +122,6 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
     
     if (!_isInitialized || _controller == null) {
       return Scaffold(
@@ -239,6 +255,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                               print("📸 Picture taken: ${file.path}");
                               
                               if (!mounted) return;
+                              
+                              // Force a brief pause to ensure image buffer is properly released
+                              await Future.delayed(const Duration(milliseconds: 100));
                               
                               // Get the bloc reference before navigation
                               final bloc = context.read<ProductSuggestionBloc>();
