@@ -10,7 +10,7 @@ class ProductSuggestion with _$ProductSuggestion {
     required String message,
     @JsonKey(name: 'thread_id') String? threadId,
     Quiz? quiz,
-    Suggestion? suggestion,
+    @JsonKey(name: 'products') List<Product>? products,
   }) = _ProductSuggestion;
 
   factory ProductSuggestion.fromJson(Map<String, dynamic> json) =>
@@ -38,15 +38,6 @@ class QuizQuestion with _$QuizQuestion {
       _$QuizQuestionFromJson(json);
 }
 
-@freezed
-class Suggestion with _$Suggestion {
-  const factory Suggestion({
-    List<Product>? products,
-  }) = _Suggestion;
-
-  factory Suggestion.fromJson(Map<String, dynamic> json) =>
-      _$SuggestionFromJson(json);
-}
 
 @freezed
 class Product with _$Product {

@@ -28,9 +28,9 @@ class ProductSuggestionBloc extends Bloc<ProductSuggestionEvent, ProductSuggesti
         onData: (data) {
           print("📡 Received stream data: type=${data.type}, message=${data.message}, threadId=${data.threadId}");
           print("📡 Quiz data: ${data.quiz}");
-          print("📡 Suggestion data: ${data.suggestion}");
+          print("📡 Products data: ${data.products}");
           
-          if (data.type == "quiz_interrupt" || data.type == "quiz") {
+          if (data.type == "quiz_interrupt") {
             // Quiz is required
             final quizQuestions = data.quiz?.quiz?.map((item) {
               return quiz_widget.QuizQuestion(
@@ -52,19 +52,19 @@ class ProductSuggestionBloc extends Bloc<ProductSuggestionEvent, ProductSuggesti
               threadId: data.threadId ?? "",
               message: data.message,
             );
-          } else if (data.suggestion?.products != null && data.suggestion!.products!.isNotEmpty) {
-            // Direct suggestions without quiz or after quiz completion
-            print("📡 Found ${data.suggestion!.products!.length} products");
+          } else if (data.products != null && data.products!.isNotEmpty) {
+            // Direct suggestions from SuggestedProductList
+            print("📡 Found ${data.products!.length} products");
             return ProductSuggestionSuccess(
-              products: data.suggestion!.products!,
+              products: data.products!,
               message: data.message.isNotEmpty ? data.message : "Analysis complete!",
             );
           } else {
             // Stream update - show the message in loading state
-            // Handle custom stream messages that may not have explicit type
+            // Handle custom stream messages for workflow progress
             String displayMessage = data.message.trim();
             
-            // If message is empty, try to extract meaningful info from other fields
+            // If message is empty, try to extract meaningful info from type
             if (displayMessage.isEmpty) {
               if (data.type.isNotEmpty) {
                 // Convert type to readable message
@@ -83,7 +83,11 @@ class ProductSuggestionBloc extends Bloc<ProductSuggestionEvent, ProductSuggesti
                     break;
                   default:
                     displayMessage = data.type.replaceAll('_', ' ').toLowerCase();
-                    displayMessage = displayMessage[0].toUpperCase() + displayMessage.substring(1) + "...";
+                    if (displayMessage.isNotEmpty) {
+                      displayMessage = displayMessage[0].toUpperCase() + displayMessage.substring(1) + "...";
+                    } else {
+                      displayMessage = "Processing...";
+                    }
                 }
               } else {
                 displayMessage = "Processing image...";

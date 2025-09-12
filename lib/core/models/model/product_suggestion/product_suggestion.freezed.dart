@@ -26,7 +26,8 @@ mixin _$ProductSuggestion {
   @JsonKey(name: 'thread_id')
   String? get threadId => throw _privateConstructorUsedError;
   Quiz? get quiz => throw _privateConstructorUsedError;
-  Suggestion? get suggestion => throw _privateConstructorUsedError;
+  @JsonKey(name: 'products')
+  List<Product>? get products => throw _privateConstructorUsedError;
 
   /// Serializes this ProductSuggestion to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -50,11 +51,10 @@ abstract class $ProductSuggestionCopyWith<$Res> {
     String message,
     @JsonKey(name: 'thread_id') String? threadId,
     Quiz? quiz,
-    Suggestion? suggestion,
+    @JsonKey(name: 'products') List<Product>? products,
   });
 
   $QuizCopyWith<$Res>? get quiz;
-  $SuggestionCopyWith<$Res>? get suggestion;
 }
 
 /// @nodoc
@@ -76,7 +76,7 @@ class _$ProductSuggestionCopyWithImpl<$Res, $Val extends ProductSuggestion>
     Object? message = null,
     Object? threadId = freezed,
     Object? quiz = freezed,
-    Object? suggestion = freezed,
+    Object? products = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -96,10 +96,10 @@ class _$ProductSuggestionCopyWithImpl<$Res, $Val extends ProductSuggestion>
                 ? _value.quiz
                 : quiz // ignore: cast_nullable_to_non_nullable
                       as Quiz?,
-            suggestion: freezed == suggestion
-                ? _value.suggestion
-                : suggestion // ignore: cast_nullable_to_non_nullable
-                      as Suggestion?,
+            products: freezed == products
+                ? _value.products
+                : products // ignore: cast_nullable_to_non_nullable
+                      as List<Product>?,
           )
           as $Val,
     );
@@ -118,20 +118,6 @@ class _$ProductSuggestionCopyWithImpl<$Res, $Val extends ProductSuggestion>
       return _then(_value.copyWith(quiz: value) as $Val);
     });
   }
-
-  /// Create a copy of ProductSuggestion
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $SuggestionCopyWith<$Res>? get suggestion {
-    if (_value.suggestion == null) {
-      return null;
-    }
-
-    return $SuggestionCopyWith<$Res>(_value.suggestion!, (value) {
-      return _then(_value.copyWith(suggestion: value) as $Val);
-    });
-  }
 }
 
 /// @nodoc
@@ -148,13 +134,11 @@ abstract class _$$ProductSuggestionImplCopyWith<$Res>
     String message,
     @JsonKey(name: 'thread_id') String? threadId,
     Quiz? quiz,
-    Suggestion? suggestion,
+    @JsonKey(name: 'products') List<Product>? products,
   });
 
   @override
   $QuizCopyWith<$Res>? get quiz;
-  @override
-  $SuggestionCopyWith<$Res>? get suggestion;
 }
 
 /// @nodoc
@@ -175,7 +159,7 @@ class __$$ProductSuggestionImplCopyWithImpl<$Res>
     Object? message = null,
     Object? threadId = freezed,
     Object? quiz = freezed,
-    Object? suggestion = freezed,
+    Object? products = freezed,
   }) {
     return _then(
       _$ProductSuggestionImpl(
@@ -195,10 +179,10 @@ class __$$ProductSuggestionImplCopyWithImpl<$Res>
             ? _value.quiz
             : quiz // ignore: cast_nullable_to_non_nullable
                   as Quiz?,
-        suggestion: freezed == suggestion
-            ? _value.suggestion
-            : suggestion // ignore: cast_nullable_to_non_nullable
-                  as Suggestion?,
+        products: freezed == products
+            ? _value._products
+            : products // ignore: cast_nullable_to_non_nullable
+                  as List<Product>?,
       ),
     );
   }
@@ -212,8 +196,8 @@ class _$ProductSuggestionImpl implements _ProductSuggestion {
     required this.message,
     @JsonKey(name: 'thread_id') this.threadId,
     this.quiz,
-    this.suggestion,
-  });
+    @JsonKey(name: 'products') final List<Product>? products,
+  }) : _products = products;
 
   factory _$ProductSuggestionImpl.fromJson(Map<String, dynamic> json) =>
       _$$ProductSuggestionImplFromJson(json);
@@ -227,12 +211,20 @@ class _$ProductSuggestionImpl implements _ProductSuggestion {
   final String? threadId;
   @override
   final Quiz? quiz;
+  final List<Product>? _products;
   @override
-  final Suggestion? suggestion;
+  @JsonKey(name: 'products')
+  List<Product>? get products {
+    final value = _products;
+    if (value == null) return null;
+    if (_products is EqualUnmodifiableListView) return _products;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
 
   @override
   String toString() {
-    return 'ProductSuggestion(type: $type, message: $message, threadId: $threadId, quiz: $quiz, suggestion: $suggestion)';
+    return 'ProductSuggestion(type: $type, message: $message, threadId: $threadId, quiz: $quiz, products: $products)';
   }
 
   @override
@@ -245,14 +237,19 @@ class _$ProductSuggestionImpl implements _ProductSuggestion {
             (identical(other.threadId, threadId) ||
                 other.threadId == threadId) &&
             (identical(other.quiz, quiz) || other.quiz == quiz) &&
-            (identical(other.suggestion, suggestion) ||
-                other.suggestion == suggestion));
+            const DeepCollectionEquality().equals(other._products, _products));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, type, message, threadId, quiz, suggestion);
+  int get hashCode => Object.hash(
+    runtimeType,
+    type,
+    message,
+    threadId,
+    quiz,
+    const DeepCollectionEquality().hash(_products),
+  );
 
   /// Create a copy of ProductSuggestion
   /// with the given fields replaced by the non-null parameter values.
@@ -277,7 +274,7 @@ abstract class _ProductSuggestion implements ProductSuggestion {
     required final String message,
     @JsonKey(name: 'thread_id') final String? threadId,
     final Quiz? quiz,
-    final Suggestion? suggestion,
+    @JsonKey(name: 'products') final List<Product>? products,
   }) = _$ProductSuggestionImpl;
 
   factory _ProductSuggestion.fromJson(Map<String, dynamic> json) =
@@ -293,7 +290,8 @@ abstract class _ProductSuggestion implements ProductSuggestion {
   @override
   Quiz? get quiz;
   @override
-  Suggestion? get suggestion;
+  @JsonKey(name: 'products')
+  List<Product>? get products;
 
   /// Create a copy of ProductSuggestion
   /// with the given fields replaced by the non-null parameter values.
@@ -638,166 +636,6 @@ abstract class _QuizQuestion implements QuizQuestion {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$QuizQuestionImplCopyWith<_$QuizQuestionImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-Suggestion _$SuggestionFromJson(Map<String, dynamic> json) {
-  return _Suggestion.fromJson(json);
-}
-
-/// @nodoc
-mixin _$Suggestion {
-  List<Product>? get products => throw _privateConstructorUsedError;
-
-  /// Serializes this Suggestion to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of Suggestion
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $SuggestionCopyWith<Suggestion> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $SuggestionCopyWith<$Res> {
-  factory $SuggestionCopyWith(
-    Suggestion value,
-    $Res Function(Suggestion) then,
-  ) = _$SuggestionCopyWithImpl<$Res, Suggestion>;
-  @useResult
-  $Res call({List<Product>? products});
-}
-
-/// @nodoc
-class _$SuggestionCopyWithImpl<$Res, $Val extends Suggestion>
-    implements $SuggestionCopyWith<$Res> {
-  _$SuggestionCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of Suggestion
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? products = freezed}) {
-    return _then(
-      _value.copyWith(
-            products: freezed == products
-                ? _value.products
-                : products // ignore: cast_nullable_to_non_nullable
-                      as List<Product>?,
-          )
-          as $Val,
-    );
-  }
-}
-
-/// @nodoc
-abstract class _$$SuggestionImplCopyWith<$Res>
-    implements $SuggestionCopyWith<$Res> {
-  factory _$$SuggestionImplCopyWith(
-    _$SuggestionImpl value,
-    $Res Function(_$SuggestionImpl) then,
-  ) = __$$SuggestionImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({List<Product>? products});
-}
-
-/// @nodoc
-class __$$SuggestionImplCopyWithImpl<$Res>
-    extends _$SuggestionCopyWithImpl<$Res, _$SuggestionImpl>
-    implements _$$SuggestionImplCopyWith<$Res> {
-  __$$SuggestionImplCopyWithImpl(
-    _$SuggestionImpl _value,
-    $Res Function(_$SuggestionImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of Suggestion
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? products = freezed}) {
-    return _then(
-      _$SuggestionImpl(
-        products: freezed == products
-            ? _value._products
-            : products // ignore: cast_nullable_to_non_nullable
-                  as List<Product>?,
-      ),
-    );
-  }
-}
-
-/// @nodoc
-@JsonSerializable()
-class _$SuggestionImpl implements _Suggestion {
-  const _$SuggestionImpl({final List<Product>? products})
-    : _products = products;
-
-  factory _$SuggestionImpl.fromJson(Map<String, dynamic> json) =>
-      _$$SuggestionImplFromJson(json);
-
-  final List<Product>? _products;
-  @override
-  List<Product>? get products {
-    final value = _products;
-    if (value == null) return null;
-    if (_products is EqualUnmodifiableListView) return _products;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(value);
-  }
-
-  @override
-  String toString() {
-    return 'Suggestion(products: $products)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$SuggestionImpl &&
-            const DeepCollectionEquality().equals(other._products, _products));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode =>
-      Object.hash(runtimeType, const DeepCollectionEquality().hash(_products));
-
-  /// Create a copy of Suggestion
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$SuggestionImplCopyWith<_$SuggestionImpl> get copyWith =>
-      __$$SuggestionImplCopyWithImpl<_$SuggestionImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$SuggestionImplToJson(this);
-  }
-}
-
-abstract class _Suggestion implements Suggestion {
-  const factory _Suggestion({final List<Product>? products}) = _$SuggestionImpl;
-
-  factory _Suggestion.fromJson(Map<String, dynamic> json) =
-      _$SuggestionImpl.fromJson;
-
-  @override
-  List<Product>? get products;
-
-  /// Create a copy of Suggestion
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$SuggestionImplCopyWith<_$SuggestionImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

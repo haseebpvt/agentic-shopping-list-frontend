@@ -15,9 +15,9 @@ _$ProductSuggestionImpl _$$ProductSuggestionImplFromJson(
   quiz: json['quiz'] == null
       ? null
       : Quiz.fromJson(json['quiz'] as Map<String, dynamic>),
-  suggestion: json['suggestion'] == null
-      ? null
-      : Suggestion.fromJson(json['suggestion'] as Map<String, dynamic>),
+  products: (json['products'] as List<dynamic>?)
+      ?.map((e) => Product.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$$ProductSuggestionImplToJson(
@@ -27,7 +27,7 @@ Map<String, dynamic> _$$ProductSuggestionImplToJson(
   'message': instance.message,
   'thread_id': instance.threadId,
   'quiz': instance.quiz,
-  'suggestion': instance.suggestion,
+  'products': instance.products,
 };
 
 _$QuizImpl _$$QuizImplFromJson(Map<String, dynamic> json) => _$QuizImpl(
@@ -52,16 +52,6 @@ Map<String, dynamic> _$$QuizQuestionImplToJson(_$QuizQuestionImpl instance) =>
       'question': instance.question,
       'answers': instance.answers,
     };
-
-_$SuggestionImpl _$$SuggestionImplFromJson(Map<String, dynamic> json) =>
-    _$SuggestionImpl(
-      products: (json['products'] as List<dynamic>?)
-          ?.map((e) => Product.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
-
-Map<String, dynamic> _$$SuggestionImplToJson(_$SuggestionImpl instance) =>
-    <String, dynamic>{'products': instance.products};
 
 _$ProductImpl _$$ProductImplFromJson(Map<String, dynamic> json) =>
     _$ProductImpl(

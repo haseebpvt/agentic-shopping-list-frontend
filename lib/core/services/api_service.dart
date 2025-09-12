@@ -143,16 +143,17 @@ class ApiServiceImpl implements ApiService {
               final json = jsonDecode(jsonStr);
               print("🔄 Decoded JSON: $json");
               
-              // Ensure we have the minimum required fields with defaults
+              // Handle different response formats from the backend
               final sanitizedJson = <String, dynamic>{
                 'type': json['type']?.toString() ?? '',
                 'message': json['message']?.toString() ?? '',
                 'thread_id': json['thread_id']?.toString(),
                 if (json['quiz'] != null) 'quiz': json['quiz'],
-                if (json['suggestion'] != null) 'suggestion': json['suggestion'],
+                // Handle both direct products array and nested suggestion structure
+                if (json['products'] != null) 'products': json['products'],
                 // Include any other fields that might be present
                 ...json.entries
-                    .where((entry) => !['type', 'message', 'thread_id', 'quiz', 'suggestion'].contains(entry.key))
+                    .where((entry) => !['type', 'message', 'thread_id', 'quiz', 'products'].contains(entry.key))
                     .fold<Map<String, dynamic>>({}, (acc, entry) => {
                   ...acc,
                   entry.key.toString(): entry.value,
@@ -164,8 +165,8 @@ class ApiServiceImpl implements ApiService {
               if (result.quiz != null) {
                 print("✅ Quiz data present: ${result.quiz!.quiz?.length ?? 0} questions");
               }
-              if (result.suggestion != null) {
-                print("✅ Suggestion data present: ${result.suggestion!.products?.length ?? 0} products");
+              if (result.products != null) {
+                print("✅ Products data present: ${result.products!.length} products");
               }
               yield result;
             } catch (parseError) {
@@ -190,16 +191,17 @@ class ApiServiceImpl implements ApiService {
         final json = jsonDecode(buffer.trim());
         print("🔄 Final decoded JSON: $json");
         
-        // Ensure we have the minimum required fields with defaults
+        // Handle different response formats from the backend
         final sanitizedJson = <String, dynamic>{
           'type': json['type']?.toString() ?? '',
           'message': json['message']?.toString() ?? '',
           'thread_id': json['thread_id']?.toString(),
           if (json['quiz'] != null) 'quiz': json['quiz'],
-          if (json['suggestion'] != null) 'suggestion': json['suggestion'],
+          // Handle both direct products array and nested suggestion structure
+          if (json['products'] != null) 'products': json['products'],
           // Include any other fields that might be present
           ...json.entries
-              .where((entry) => !['type', 'message', 'thread_id', 'quiz', 'suggestion'].contains(entry.key))
+              .where((entry) => !['type', 'message', 'thread_id', 'quiz', 'products'].contains(entry.key))
               .fold<Map<String, dynamic>>({}, (acc, entry) => {
             ...acc,
             entry.key.toString(): entry.value,
