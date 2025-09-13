@@ -163,8 +163,17 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
           return Stack(
             fit: StackFit.expand,
             children: [
-              // Full screen camera preview
-              CameraPreview(_controller!),
+              // Full screen camera preview without stretching (crops to fit)
+              SizedBox.expand(
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _controller!.value.previewSize?.height ?? 1,
+                    height: _controller!.value.previewSize?.width ?? 1,
+                    child: CameraPreview(_controller!),
+                  ),
+                ),
+              ),
               
               // Back button
               Positioned(
