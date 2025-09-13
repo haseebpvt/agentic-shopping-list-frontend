@@ -5,11 +5,15 @@ import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 late List<CameraDescription> _cameras;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
 
   _cameras = await availableCameras();
   runApp(const CameraApp());
@@ -29,7 +33,7 @@ class _CameraAppState extends State<CameraApp> {
   Widget build(BuildContext context) {
     final ApiService apiService = ApiServiceImpl(
       Dio(BaseOptions(
-        baseUrl: "https://shoppinglistagent.shop/api",
+        baseUrl: ApiConstants.baseUrl,
         connectTimeout: const Duration(seconds: 60),
         receiveTimeout: const Duration(minutes: 5),
         sendTimeout: const Duration(minutes: 2),
