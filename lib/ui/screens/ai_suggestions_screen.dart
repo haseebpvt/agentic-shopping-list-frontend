@@ -102,6 +102,15 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
       AddLocalShoppingListItem(item: localItem),
     );
 
+    // Mark the item as purchased in the AI suggestions list
+    context.read<ShoppingListBloc>().add(
+      MarkItemPurchased(
+        userId: widget.userId,
+        itemId: item.id,
+        isPurchased: true,
+      ),
+    );
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${item.itemName} added to your shopping list'),
@@ -159,7 +168,10 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                         ? state.items
                         : (state as ShoppingListInserting).items;
               
-              if (items.isEmpty) {
+              // Filter out purchased items from the display
+              final unpurchasedItems = items.where((item) => !item.isPurchased).toList();
+              
+              if (unpurchasedItems.isEmpty) {
                 return RefreshIndicator(
                   onRefresh: _onRefresh,
                   child: SingleChildScrollView(
@@ -177,7 +189,9 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'No AI suggestions available',
+                                items.isEmpty 
+                                    ? 'No AI suggestions available'
+                                    : 'All suggestions added to cart',
                                 style: TextStyle(
                                   fontSize: 18,
                                   color: Theme.of(context).disabledColor,
@@ -199,7 +213,7 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                 );
               }
 
-              final groupedItems = _groupItemsByCategory(items);
+              final groupedItems = _groupItemsByCategory(unpurchasedItems);
               final categories = groupedItems.keys.toList()..sort();
 
               return RefreshIndicator(

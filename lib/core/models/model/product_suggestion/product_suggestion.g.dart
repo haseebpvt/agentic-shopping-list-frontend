@@ -57,16 +57,20 @@ Map<String, dynamic> _$$QuizQuestionImplToJson(_$QuizQuestionImpl instance) =>
 
 _$ProductImpl _$$ProductImplFromJson(Map<String, dynamic> json) =>
     _$ProductImpl(
+      id: (json['id'] as num?)?.toInt(),
       name: json['name'] as String,
       reasonForSuggestion: json['reason_for_suggestion'] as String,
       note: json['note'] as String?,
       obviousChoice: json['obvious_choice'] as bool,
+      isPurchased: json['is_purchased'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$ProductImplToJson(_$ProductImpl instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'name': instance.name,
       'reason_for_suggestion': instance.reasonForSuggestion,
       'note': instance.note,
       'obvious_choice': instance.obviousChoice,
+      'is_purchased': instance.isPurchased,
     };

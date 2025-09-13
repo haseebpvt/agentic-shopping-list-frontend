@@ -299,13 +299,12 @@ class ApiServiceImpl implements ApiService {
     try {
       // Create form data as per the API specification
       FormData formData = FormData.fromMap({
-        "user_id": userId,
-        "item_id": itemId,
-        "is_purchased": isPurchased,
+        "item_id": itemId.toString(),
+        "is_purchased": isPurchased ? "1" : "0",
       });
 
       print("🌐 Making request to: ${dio.options.baseUrl}/shopping_list/mark_purchased");
-      print("📤 Request data: user_id=$userId, item_id=$itemId, is_purchased=$isPurchased");
+      print("📤 Request data: item_id=${itemId.toString()}, is_purchased=${isPurchased ? "1" : "0"}");
 
       final response = await dio.post(
         "/shopping_list/mark_purchased",
