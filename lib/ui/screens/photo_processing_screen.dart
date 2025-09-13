@@ -29,8 +29,8 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
   late Animation<Offset> _quizCardAnimation;
   late Animation<Offset> _resultsCardAnimation;
   
-  // Cache the image widget to prevent repeated file reads
-  Widget? _cachedBackgroundImage;
+  // Cache flag to track if we need to rebuild the background image
+  bool _backgroundImageCacheInvalid = true;
 
   @override
   void initState() {
@@ -77,9 +77,6 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
 
     // Start with status card animation
     _statusCardController.forward();
-    
-    // Pre-create and cache the background image widget
-    _cachedBackgroundImage = _createBackgroundImage();
   }
 
   @override
@@ -87,8 +84,6 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
     _statusCardController.dispose();
     _quizCardController.dispose();
     _resultsCardController.dispose();
-    // Clear the cached image widget
-    _cachedBackgroundImage = null;
     super.dispose();
   }
 
@@ -116,20 +111,17 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
         },
         child: Stack(
           children: [
-            // Full screen background image (cached)
-            _cachedBackgroundImage ?? Container(),
+            // Header background image
+            _createBackgroundImage(context),
             
-            // Dark overlay for better card visibility
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.1),
-                    Colors.black.withOpacity(0.3),
-                  ],
-                ),
+            // Background color for the rest of the screen
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.2,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                color: Theme.of(context).scaffoldBackgroundColor,
               ),
             ),
 
@@ -144,29 +136,48 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
     );
   }
 
-  Widget _createBackgroundImage() {
-    return Positioned.fill(
+  Widget _createBackgroundImage(BuildContext context) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      height: MediaQuery.of(context).size.height * 0.2, // Header takes 20% of screen height
       child: RepaintBoundary(
-        child: Image.file(
-          File(widget.imagePath),
-          fit: BoxFit.cover,
-          // Add cacheWidth and cacheHeight to optimize memory usage and prevent buffer overflow
-          cacheWidth: 1080, // Reduced from 1920 to further optimize memory
-          cacheHeight: 720, // Reduced from 1080 to further optimize memory
-          filterQuality: FilterQuality.medium, // Balance quality and performance
-          errorBuilder: (context, error, stackTrace) {
-            print('Error loading background image: $error');
-            return Container(
-              color: Colors.grey[100],
-              child: const Center(
-                child: Icon(
-                  Icons.image_not_supported,
-                  size: 64,
-                  color: Colors.grey,
-                ),
-              ),
-            );
+        child: ShaderMask(
+          shaderCallback: (rect) {
+            return const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white, // Full opacity at top
+                Colors.white, // Keep full opacity for most of the header
+                Colors.transparent, // Fade to transparent at bottom of header
+              ],
+              stops: [0.0, 0.4, 1.0], // Start fading at 40% of header height for smoother transition
+            ).createShader(rect);
           },
+          blendMode: BlendMode.dstIn,
+          child: Image.file(
+            File(widget.imagePath),
+            fit: BoxFit.cover,
+            // Add cacheWidth and cacheHeight to optimize memory usage and prevent buffer overflow
+            cacheWidth: 1080, // Reduced from 1920 to further optimize memory
+            cacheHeight: 720, // Reduced from 1080 to further optimize memory
+            filterQuality: FilterQuality.medium, // Balance quality and performance
+            errorBuilder: (context, error, stackTrace) {
+              print('Error loading background image: $error');
+              return Container(
+                color: Colors.grey[100],
+                child: const Center(
+                  child: Icon(
+                    Icons.image_not_supported,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
