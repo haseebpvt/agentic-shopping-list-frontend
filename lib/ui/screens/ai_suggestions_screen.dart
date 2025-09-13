@@ -75,6 +75,63 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
     super.dispose();
   }
 
+  void _showVoiceRecording() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: context.read<ShoppingListBloc>()),
+          BlocProvider.value(value: context.read<LocalShoppingListBloc>()),
+        ],
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(modalContext).viewInsets.bottom,
+          ),
+          child: VoiceRecordingWidget(
+            userId: widget.userId,
+            onClose: () => Navigator.of(modalContext).pop(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showTextInputDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Add Text Input'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: TextField(
+            controller: _messageController,
+            decoration: const InputDecoration(
+              hintText: 'Enter your shopping requests...',
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 5,
+            autofocus: true,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              _onSubmitMessage();
+            },
+            child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _onSubmitMessage() {
     final message = _messageController.text.trim();
     if (message.isNotEmpty) {
@@ -436,74 +493,44 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
               ),
             ),
             
-            // AI input field at bottom
+            // Bottom action bar with keyboard and mic buttons
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: BlocBuilder<ShoppingListBloc, ShoppingListState>(
                 builder: (context, state) {
                   final isInserting = state is ShoppingListInserting;
                   
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(25),
-                      border: Border.all(
-                        color: Theme.of(context).dividerColor,
-                        width: 1,
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Keyboard button (bottom left)
+                      FloatingActionButton(
+                        heroTag: "keyboard_fab",
+                        onPressed: isInserting ? null : _showTextInputDialog,
+                        backgroundColor: isInserting 
+                            ? Theme.of(context).disabledColor
+                            : Theme.of(context).colorScheme.secondary,
+                        child: const Icon(Icons.keyboard),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        // Text field
-                        Expanded(
-                          child: TextField(
-                            controller: _messageController,
-                            enabled: !isInserting,
-                            decoration: InputDecoration(
-                              hintText: isInserting ? 'Getting suggestions...' : 'Ask AI for suggestions...',
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 16,
-                              ),
-                            ),
-                            maxLines: null,
-                            onSubmitted: isInserting ? null : (_) => _onSubmitMessage(),
-                          ),
-                        ),
-                        // Submit button
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: GestureDetector(
-                            onTap: isInserting ? null : _onSubmitMessage,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: isInserting 
-                                    ? Theme.of(context).disabledColor 
-                                    : Theme.of(context).primaryColor,
-                                shape: BoxShape.circle,
-                              ),
-                              child: isInserting
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                      ),
-                                    )
-                                  : const Icon(
-                                      Icons.send,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      // Mic button (center)
+                      FloatingActionButton(
+                        heroTag: "voice_fab",
+                        onPressed: isInserting ? null : _showVoiceRecording,
+                        backgroundColor: isInserting 
+                            ? Theme.of(context).disabledColor
+                            : Colors.green,
+                        child: isInserting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.mic),
+                      ),
+                    ],
                   );
                 },
               ),

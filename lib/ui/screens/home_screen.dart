@@ -103,28 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showVoiceRecording() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (modalContext) => MultiBlocProvider(
-        providers: [
-          BlocProvider.value(value: context.read<ShoppingListBloc>()),
-          BlocProvider.value(value: context.read<LocalShoppingListBloc>()),
-        ],
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(modalContext).viewInsets.bottom,
-          ),
-          child: VoiceRecordingWidget(
-            userId: _userId,
-            onClose: () => Navigator.of(modalContext).pop(),
-          ),
-        ),
-      ),
-    );
-  }
 
   Future<void> _showAddItemBottomSheet({LocalShoppingListItem? item}) async {
     final result = await showModalBottomSheet<LocalShoppingListItem>(
@@ -879,12 +857,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: _onCameraButtonPressed,
                           backgroundColor: Theme.of(context).colorScheme.secondary,
                           child: const Icon(Icons.camera_alt),
-                        ),
-                        FloatingActionButton(
-                          heroTag: "voice_fab",
-                          onPressed: _showVoiceRecording,
-                          backgroundColor: Colors.green,
-                          child: const Icon(Icons.mic),
                         ),
                         FloatingActionButton(
                           heroTag: "add_fab",
