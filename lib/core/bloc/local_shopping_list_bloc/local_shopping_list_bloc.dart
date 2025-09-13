@@ -58,6 +58,28 @@ class IdentifyUncategorizedItems extends LocalShoppingListEvent {}
 
 class LoadLocalShoppingListWithAnimation extends LocalShoppingListEvent {}
 
+class SelectLocalShoppingListItem extends LocalShoppingListEvent {
+  final int id;
+
+  const SelectLocalShoppingListItem({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}
+
+class DeselectLocalShoppingListItem extends LocalShoppingListEvent {
+  final int id;
+
+  const DeselectLocalShoppingListItem({required this.id});
+
+  @override
+  List<Object?> get props => [id];
+}
+
+class ClearLocalItemSelection extends LocalShoppingListEvent {}
+
+class DeleteSelectedLocalItems extends LocalShoppingListEvent {}
+
 
 // States
 abstract class LocalShoppingListState extends Equatable {
@@ -73,11 +95,15 @@ class LocalShoppingListLoading extends LocalShoppingListState {}
 
 class LocalShoppingListLoaded extends LocalShoppingListState {
   final List<LocalShoppingListItem> items;
+  final Set<int> selectedItemIds;
 
-  const LocalShoppingListLoaded({required this.items});
+  const LocalShoppingListLoaded({
+    required this.items,
+    this.selectedItemIds = const {},
+  });
 
   @override
-  List<Object?> get props => [items];
+  List<Object?> get props => [items, selectedItemIds];
 }
 
 class LocalShoppingListError extends LocalShoppingListState {
@@ -92,27 +118,31 @@ class LocalShoppingListError extends LocalShoppingListState {
 class LocalShoppingListItemUpdating extends LocalShoppingListState {
   final List<LocalShoppingListItem> items;
   final int updatingItemId;
+  final Set<int> selectedItemIds;
 
   const LocalShoppingListItemUpdating({
     required this.items,
     required this.updatingItemId,
+    this.selectedItemIds = const {},
   });
 
   @override
-  List<Object?> get props => [items, updatingItemId];
+  List<Object?> get props => [items, updatingItemId, selectedItemIds];
 }
 
 class LocalShoppingListReordering extends LocalShoppingListState {
   final List<LocalShoppingListItem> oldItems;
   final List<LocalShoppingListItem> newItems;
+  final Set<int> selectedItemIds;
 
   const LocalShoppingListReordering({
     required this.oldItems,
     required this.newItems,
+    this.selectedItemIds = const {},
   });
 
   @override
-  List<Object?> get props => [oldItems, newItems];
+  List<Object?> get props => [oldItems, newItems, selectedItemIds];
 }
 
 // Bloc
@@ -139,6 +169,10 @@ class LocalShoppingListBloc extends Bloc<LocalShoppingListEvent, LocalShoppingLi
     on<ClearPurchasedLocalItems>(_onClearPurchasedLocalItems);
     on<IdentifyUncategorizedItems>(_onIdentifyUncategorizedItems);
     on<LoadLocalShoppingListWithAnimation>(_onLoadLocalShoppingListWithAnimation);
+    on<SelectLocalShoppingListItem>(_onSelectLocalShoppingListItem);
+    on<DeselectLocalShoppingListItem>(_onDeselectLocalShoppingListItem);
+    on<ClearLocalItemSelection>(_onClearLocalItemSelection);
+    on<DeleteSelectedLocalItems>(_onDeleteSelectedLocalItems);
   }
 
   /// Callback method for when categories are updated in the background
@@ -186,6 +220,84 @@ class LocalShoppingListBloc extends Bloc<LocalShoppingListEvent, LocalShoppingLi
     }
     
     return false;
+  }
+
+  /// Helper method to get current selected item IDs from state
+  Set<int> _getCurrentSelectedIds() {
+    final currentState = state;
+    if (currentState is LocalShoppingListLoaded) {
+      return currentState.selectedItemIds;
+    } else if (currentState is LocalShoppingListItemUpdating) {
+      return currentState.selectedItemIds;
+    } else if (currentState is LocalShoppingListReordering) {
+      return currentState.selectedItemIds;
+    }
+    return {};
+  }
+
+  Future<void> _onSelectLocalShoppingListItem(
+    SelectLocalShoppingListItem event,
+    Emitter<LocalShoppingListState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is LocalShoppingListLoaded) {
+      final newSelectedIds = Set<int>.from(currentState.selectedItemIds)..add(event.id);
+      emit(LocalShoppingListLoaded(
+        items: currentState.items,
+        selectedItemIds: newSelectedIds,
+      ));
+    }
+  }
+
+  Future<void> _onDeselectLocalShoppingListItem(
+    DeselectLocalShoppingListItem event,
+    Emitter<LocalShoppingListState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is LocalShoppingListLoaded) {
+      final newSelectedIds = Set<int>.from(currentState.selectedItemIds)..remove(event.id);
+      emit(LocalShoppingListLoaded(
+        items: currentState.items,
+        selectedItemIds: newSelectedIds,
+      ));
+    }
+  }
+
+  Future<void> _onClearLocalItemSelection(
+    ClearLocalItemSelection event,
+    Emitter<LocalShoppingListState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is LocalShoppingListLoaded) {
+      emit(LocalShoppingListLoaded(
+        items: currentState.items,
+        selectedItemIds: {},
+      ));
+    }
+  }
+
+  Future<void> _onDeleteSelectedLocalItems(
+    DeleteSelectedLocalItems event,
+    Emitter<LocalShoppingListState> emit,
+  ) async {
+    try {
+      final selectedIds = _getCurrentSelectedIds();
+      if (selectedIds.isEmpty) return;
+
+      // Delete all selected items
+      for (final id in selectedIds) {
+        await _service.deleteItem(id);
+      }
+      
+      // Reload the list and clear selection
+      final items = await _service.getAllItems();
+      emit(LocalShoppingListLoaded(
+        items: items,
+        selectedItemIds: {},
+      ));
+    } catch (e) {
+      emit(LocalShoppingListError(message: e.toString()));
+    }
   }
 
   Future<void> _onLoadLocalShoppingList(
@@ -250,17 +362,23 @@ class LocalShoppingListBloc extends Bloc<LocalShoppingListEvent, LocalShoppingLi
     Emitter<LocalShoppingListState> emit,
   ) async {
     try {
+      final selectedIds = _getCurrentSelectedIds();
+      
       if (state is LocalShoppingListLoaded) {
         final currentItems = (state as LocalShoppingListLoaded).items;
         emit(LocalShoppingListItemUpdating(
           items: currentItems,
           updatingItemId: event.id,
+          selectedItemIds: selectedIds,
         ));
       }
 
       await _service.togglePurchased(event.id, event.isPurchased);
       final items = await _service.getAllItems();
-      emit(LocalShoppingListLoaded(items: items));
+      emit(LocalShoppingListLoaded(
+        items: items,
+        selectedItemIds: selectedIds,
+      ));
     } catch (e) {
       emit(LocalShoppingListError(message: e.toString()));
     }
@@ -301,6 +419,7 @@ class LocalShoppingListBloc extends Bloc<LocalShoppingListEvent, LocalShoppingLi
     if (currentState is LocalShoppingListLoaded) {
       try {
         final newItems = await _service.getAllItems();
+        final selectedIds = currentState.selectedItemIds;
         
         // Only emit reordering state if items actually changed positions
         final oldGrouping = _groupItemsByCategory(currentState.items);
@@ -314,14 +433,21 @@ class LocalShoppingListBloc extends Bloc<LocalShoppingListEvent, LocalShoppingLi
           emit(LocalShoppingListReordering(
             oldItems: currentState.items,
             newItems: newItems,
+            selectedItemIds: selectedIds,
           ));
           
           // After a brief delay, emit the final loaded state
           await Future.delayed(const Duration(milliseconds: 600));
-          emit(LocalShoppingListLoaded(items: newItems));
+          emit(LocalShoppingListLoaded(
+            items: newItems,
+            selectedItemIds: selectedIds,
+          ));
         } else {
           // No significant changes, just update directly
-          emit(LocalShoppingListLoaded(items: newItems));
+          emit(LocalShoppingListLoaded(
+            items: newItems,
+            selectedItemIds: selectedIds,
+          ));
         }
       } catch (e) {
         // On error, just reload normally

@@ -305,146 +305,179 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, scale, child) {
           return Transform.scale(
             scale: scale,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              child: Card(
-                elevation: item.isPurchased ? 1 : 2,
-                color: item.isPurchased 
-                    ? Theme.of(context).cardColor.withOpacity(0.7)
-                    : Theme.of(context).cardColor,
-                child: AnimatedContainer(
+            child: BlocBuilder<LocalShoppingListBloc, LocalShoppingListState>(
+              builder: (context, state) {
+                Set<int> selectedIds = {};
+                if (state is LocalShoppingListLoaded) {
+                  selectedIds = state.selectedItemIds;
+                } else if (state is LocalShoppingListItemUpdating) {
+                  selectedIds = state.selectedItemIds;
+                } else if (state is LocalShoppingListReordering) {
+                  selectedIds = state.selectedItemIds;
+                }
+                
+                final isSelected = selectedIds.contains(item.id);
+                final hasSelection = selectedIds.isNotEmpty;
+                
+                return AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    border: item.isPurchased 
-                        ? Border.all(
-                            color: const Color(0xFF4CAF50).withOpacity(0.3),
-                            width: 1,
-                          )
-                        : null,
-                  ),
-                  child: ListTile(
-                onTap: () => _showAddItemBottomSheet(item: item),
-                leading: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  child: CircleAvatar(
-                    backgroundColor: item.isPurchased 
-                        ? const Color(0xFF4CAF50) 
-                        : Theme.of(context).primaryColor,
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      transitionBuilder: (Widget child, Animation<double> animation) {
-                        return ScaleTransition(scale: animation, child: child);
-                      },
-                      child: Icon(
-                        item.isPurchased 
-                            ? Icons.check 
-                            : Icons.shopping_basket,
-                        key: ValueKey(item.isPurchased ? 'check' : 'basket'),
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-                title: AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    decoration: item.isPurchased 
-                        ? TextDecoration.lineThrough 
-                        : null,
+                  child: Card(
+                    elevation: item.isPurchased ? 1 : 2,
                     color: item.isPurchased 
-                        ? Theme.of(context).disabledColor 
-                        : Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
-                  child: Text(item.itemName),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (item.note.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'Note: ${item.note}',
-                        style: TextStyle(
-                          color: Theme.of(context).hintColor,
-                          fontSize: 14,
-                        ),
+                        ? Theme.of(context).cardColor.withOpacity(0.7)
+                        : Theme.of(context).cardColor,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        border: isSelected
+                            ? Border.all(
+                                color: Theme.of(context).primaryColor,
+                                width: 2,
+                              )
+                            : item.isPurchased 
+                                ? Border.all(
+                                    color: const Color(0xFF4CAF50).withOpacity(0.3),
+                                    width: 1,
+                                  )
+                                : null,
                       ),
-                    ],
-                    if (item.quantity.isNotEmpty && item.quantity != "Not specified") ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Quantity: ${item.quantity}${item.unit.isNotEmpty ? ' ${item.unit}' : ''}',
-                              style: TextStyle(
-                                color: Theme.of(context).hintColor,
-                                fontSize: 14,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    BlocBuilder<LocalShoppingListBloc, LocalShoppingListState>(
-                      builder: (context, state) {
-                        final isUpdating = state is LocalShoppingListItemUpdating && 
-                                          state.updatingItemId == item.id!;
-                        
-                        return isUpdating 
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : _buildAnimatedCircularCheckbox(
-                              isChecked: item.isPurchased,
-                              onChanged: (bool? value) {
-                                if (value != null && item.id != null) {
+                      child: ListTile(
+                        onTap: hasSelection 
+                            ? () {
+                                // Toggle selection if in selection mode
+                                if (isSelected) {
                                   context.read<LocalShoppingListBloc>().add(
-                                    ToggleLocalItemPurchased(
-                                      id: item.id!,
-                                      isPurchased: value,
-                                    ),
+                                    DeselectLocalShoppingListItem(id: item.id!),
+                                  );
+                                } else {
+                                  context.read<LocalShoppingListBloc>().add(
+                                    SelectLocalShoppingListItem(id: item.id!),
                                   );
                                 }
-                              },
-                            );
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () {
-                        if (item.id != null) {
+                              }
+                            : () => _showAddItemBottomSheet(item: item),
+                        onLongPress: () {
+                          // Start selection mode
                           context.read<LocalShoppingListBloc>().add(
-                            DeleteLocalShoppingListItem(id: item.id!),
+                            SelectLocalShoppingListItem(id: item.id!),
                           );
-                        }
-                      },
-                      color: Theme.of(context).colorScheme.error,
+                        },
+                        leading: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                          child: isSelected
+                              ? CircleAvatar(
+                                  backgroundColor: Theme.of(context).primaryColor,
+                                  child: const Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                )
+                              : CircleAvatar(
+                                  backgroundColor: item.isPurchased 
+                                      ? const Color(0xFF4CAF50) 
+                                      : Theme.of(context).primaryColor,
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 200),
+                                    transitionBuilder: (Widget child, Animation<double> animation) {
+                                      return ScaleTransition(scale: animation, child: child);
+                                    },
+                                    child: Icon(
+                                      item.isPurchased 
+                                          ? Icons.check 
+                                          : Icons.shopping_basket,
+                                      key: ValueKey(item.isPurchased ? 'check' : 'basket'),
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                        title: AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            decoration: item.isPurchased 
+                                ? TextDecoration.lineThrough 
+                                : null,
+                            color: item.isPurchased 
+                                ? Theme.of(context).disabledColor 
+                                : Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                          child: Text(item.itemName),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (item.note.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'Note: ${item.note}',
+                                style: TextStyle(
+                                  color: Theme.of(context).hintColor,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                            if (item.quantity.isNotEmpty && item.quantity != "Not specified") ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      'Quantity: ${item.quantity}${item.unit.isNotEmpty ? ' ${item.unit}' : ''}',
+                                      style: TextStyle(
+                                        color: Theme.of(context).hintColor,
+                                        fontSize: 14,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                        trailing: !hasSelection ? BlocBuilder<LocalShoppingListBloc, LocalShoppingListState>(
+                          builder: (context, state) {
+                            final isUpdating = state is LocalShoppingListItemUpdating && 
+                                              state.updatingItemId == item.id!;
+                            
+                            return isUpdating 
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : _buildAnimatedCircularCheckbox(
+                                  isChecked: item.isPurchased,
+                                  onChanged: (bool? value) {
+                                    if (value != null && item.id != null) {
+                                      context.read<LocalShoppingListBloc>().add(
+                                        ToggleLocalItemPurchased(
+                                          id: item.id!,
+                                          isPurchased: value,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                );
+                          },
+                        ) : null,
+                      ),
                     ),
-                  ],
-                ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           );
         },
@@ -454,33 +487,77 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Shopping List'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.psychology),
-            tooltip: 'Preferences',
-            onPressed: () {
-              // Get the API service from main.dart context by going up the widget tree
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (newContext) => MultiBlocProvider(
-                    providers: [
-                      // Provide all the same blocs that are available in main
-                      BlocProvider.value(value: context.read<ProductSuggestionBloc>()),
-                      BlocProvider.value(value: context.read<ShoppingListBloc>()),
-                      BlocProvider.value(value: context.read<PreferenceListBloc>()),
-                    ],
-                    child: const PreferencesScreen(),
-                  ),
-                ),
-              );
-            },
+    return BlocBuilder<LocalShoppingListBloc, LocalShoppingListState>(
+      builder: (context, state) {
+        Set<int> selectedIds = {};
+        if (state is LocalShoppingListLoaded) {
+          selectedIds = state.selectedItemIds;
+        } else if (state is LocalShoppingListItemUpdating) {
+          selectedIds = state.selectedItemIds;
+        } else if (state is LocalShoppingListReordering) {
+          selectedIds = state.selectedItemIds;
+        }
+        
+        final hasSelection = selectedIds.isNotEmpty;
+        
+        return Scaffold(
+          appBar: AppBar(
+            title: hasSelection 
+                ? Text('${selectedIds.length} selected')
+                : const Text('Shopping List'),
+            leading: hasSelection 
+                ? IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      context.read<LocalShoppingListBloc>().add(
+                        ClearLocalItemSelection(),
+                      );
+                    },
+                  )
+                : null,
+            actions: hasSelection 
+                ? [
+                    IconButton(
+                      icon: const Icon(Icons.select_all),
+                      tooltip: 'Select All',
+                      onPressed: () {
+                        // Get all item IDs and select them
+                        if (state is LocalShoppingListLoaded) {
+                          for (final item in state.items) {
+                            if (item.id != null && !selectedIds.contains(item.id)) {
+                              context.read<LocalShoppingListBloc>().add(
+                                SelectLocalShoppingListItem(id: item.id!),
+                              );
+                            }
+                          }
+                        }
+                      },
+                    ),
+                  ]
+                : [
+                    IconButton(
+                      icon: const Icon(Icons.psychology),
+                      tooltip: 'Preferences',
+                      onPressed: () {
+                        // Get the API service from main.dart context by going up the widget tree
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (newContext) => MultiBlocProvider(
+                              providers: [
+                                // Provide all the same blocs that are available in main
+                                BlocProvider.value(value: context.read<ProductSuggestionBloc>()),
+                                BlocProvider.value(value: context.read<ShoppingListBloc>()),
+                                BlocProvider.value(value: context.read<PreferenceListBloc>()),
+                              ],
+                              child: const PreferencesScreen(),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
           ),
-        ],
-      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -709,27 +786,68 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-            // Camera and Add item buttons at bottom
+            // Action buttons at bottom
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  FloatingActionButton(
-                    onPressed: _onCameraButtonPressed,
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                    child: const Icon(Icons.camera_alt),
-                  ),
-                  FloatingActionButton(
-                    onPressed: () => _showAddItemBottomSheet(),
-                    child: const Icon(Icons.add),
-                  ),
-                ],
-              ),
+              child: hasSelection
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        FloatingActionButton.extended(
+                          onPressed: () async {
+                            // Show confirmation dialog
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Delete Items'),
+                                content: Text(
+                                  'Are you sure you want to delete ${selectedIds.length} item${selectedIds.length > 1 ? 's' : ''}?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            
+                            if (confirmed == true) {
+                              context.read<LocalShoppingListBloc>().add(
+                                DeleteSelectedLocalItems(),
+                              );
+                            }
+                          },
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                          icon: const Icon(Icons.delete),
+                          label: Text('Delete (${selectedIds.length})'),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        FloatingActionButton(
+                          onPressed: _onCameraButtonPressed,
+                          backgroundColor: Theme.of(context).colorScheme.secondary,
+                          child: const Icon(Icons.camera_alt),
+                        ),
+                        FloatingActionButton(
+                          onPressed: () => _showAddItemBottomSheet(),
+                          child: const Icon(Icons.add),
+                        ),
+                      ],
+                    ),
             ),
           ],
         ),
       ),
+        );
+      },
     );
   }
 }
