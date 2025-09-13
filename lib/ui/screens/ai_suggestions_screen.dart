@@ -289,6 +289,40 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                                 margin: const EdgeInsets.only(bottom: 8),
                                 elevation: 2,
                                 child: ListTile(
+                                  onLongPress: () async {
+                                    // Show confirmation dialog for deletion
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Delete Suggestion'),
+                                        content: Text(
+                                          'Are you sure you want to delete "${item.itemName}" from AI suggestions?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.of(context).pop(false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () => Navigator.of(context).pop(true),
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: Theme.of(context).colorScheme.error,
+                                            ),
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    
+                                    if (confirmed == true) {
+                                      context.read<ShoppingListBloc>().add(
+                                        DeleteShoppingListItem(
+                                          userId: widget.userId,
+                                          itemId: item.id,
+                                        ),
+                                      );
+                                    }
+                                  },
                                   leading: CircleAvatar(
                                     backgroundColor: Theme.of(context).colorScheme.secondary,
                                     child: const Icon(

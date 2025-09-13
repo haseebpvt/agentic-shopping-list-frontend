@@ -19,6 +19,8 @@ abstract class ApiService {
 
   Future<Map<String, dynamic>> markItemPurchased(String userId, int itemId, bool isPurchased);
 
+  Future<Map<String, dynamic>> deleteShoppingListItem(int itemId);
+
   Future<PreferenceListResponse> getPreferenceList(String userId, {String? semanticSearchText});
 
   Future<Map<String, dynamic>> updatePreference(int itemId, String text);
@@ -315,6 +317,37 @@ class ApiServiceImpl implements ApiService {
       return response.data;
     } catch (e) {
       print("❌ Mark item purchased failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> deleteShoppingListItem(int itemId) async {
+    print("🔄 Deleting shopping list item: itemId=$itemId");
+    
+    try {
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "item_id": itemId.toString(),
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/shopping_list/delete");
+      print("📤 Request data: item_id=${itemId.toString()}");
+
+      final response = await dio.delete(
+        "/shopping_list/delete",
+        data: formData,
+      );
+      
+      print("✅ Delete item response: ${response.data}");
+      return response.data;
+    } catch (e) {
+      print("❌ Delete item failed: $e");
       if (e is DioException) {
         print("❌ Error type: ${e.type}");
         print("❌ Error message: ${e.message}");

@@ -16,6 +16,7 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
     on<RefreshShoppingList>(_onRefreshShoppingList);
     on<MarkItemPurchased>(_onMarkItemPurchased);
     on<InsertData>(_onInsertData);
+    on<DeleteShoppingListItem>(_onDeleteShoppingListItem);
   }
 
   Future<void> _onLoadShoppingList(
@@ -120,6 +121,38 @@ class ShoppingListBloc extends Bloc<ShoppingListEvent, ShoppingListState> {
         // Revert to previous state on error
         emit(ShoppingListLoaded(items: currentState.items));
         emit(ShoppingListError(message: 'Failed to insert data: ${e.toString()}'));
+        
+        // Return to loaded state after showing error briefly
+        await Future.delayed(const Duration(seconds: 2));
+        emit(ShoppingListLoaded(items: currentState.items));
+      }
+    }
+  }
+
+  Future<void> _onDeleteShoppingListItem(
+    DeleteShoppingListItem event,
+    Emitter<ShoppingListState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is ShoppingListLoaded) {
+      // Show updating state
+      emit(ShoppingListItemUpdating(
+        items: currentState.items,
+        updatingItemId: event.itemId,
+      ));
+
+      try {
+        // Call the API to delete item
+        await _apiService.deleteShoppingListItem(event.itemId);
+
+        // Remove the item from the local state immediately for better UX
+        final updatedItems = currentState.items.where((item) => item.id != event.itemId).toList();
+
+        emit(ShoppingListLoaded(items: updatedItems));
+      } catch (e) {
+        // Revert to previous state on error
+        emit(ShoppingListLoaded(items: currentState.items));
+        emit(ShoppingListError(message: 'Failed to delete item: ${e.toString()}'));
         
         // Return to loaded state after showing error briefly
         await Future.delayed(const Duration(seconds: 2));

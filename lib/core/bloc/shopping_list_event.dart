@@ -52,3 +52,16 @@ class InsertData extends ShoppingListEvent {
   @override
   List<Object> get props => [userId, userText];
 }
+
+class DeleteShoppingListItem extends ShoppingListEvent {
+  final String userId;
+  final int itemId;
+
+  const DeleteShoppingListItem({
+    required this.userId,
+    required this.itemId,
+  });
+
+  @override
+  List<Object> get props => [userId, itemId];
+}
