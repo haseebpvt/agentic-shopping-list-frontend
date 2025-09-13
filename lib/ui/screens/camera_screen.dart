@@ -1,4 +1,5 @@
 import 'package:advanced_shopping_list_frontend/core/bloc/product_suggestion/product_suggestion.dart';
+import 'package:advanced_shopping_list_frontend/core/bloc/local_shopping_list_bloc/local_shopping_list_bloc.dart';
 import 'photo_processing_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -278,11 +279,17 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                                 imageFile: file,
                               ));
                               
+                              // Get the LocalShoppingListBloc before navigation
+                              final localShoppingListBloc = context.read<LocalShoppingListBloc>();
+                              
                               // Navigate to photo processing screen without disposing camera
                               await Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) => BlocProvider.value(
-                                    value: bloc,
+                                  builder: (context) => MultiBlocProvider(
+                                    providers: [
+                                      BlocProvider.value(value: bloc),
+                                      BlocProvider.value(value: localShoppingListBloc),
+                                    ],
                                     child: PhotoProcessingScreen(
                                       imagePath: file.path,
                                     ),

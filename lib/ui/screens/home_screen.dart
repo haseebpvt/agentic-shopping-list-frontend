@@ -459,6 +459,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: Theme.of(context).hintColor,
                                   fontSize: 14,
                                 ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
                               ),
                             ],
                             if (item.quantity.isNotEmpty && item.quantity != "Not specified") ...[

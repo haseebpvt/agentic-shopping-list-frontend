@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:advanced_shopping_list_frontend/core/bloc/product_suggestion/product_suggestion.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/product_suggestion/product_suggestion.dart';
 import 'package:advanced_shopping_list_frontend/core/models/model/quiz_resume/quiz_resume.dart';
 import '../widgets/suggested_product_view.dart';
+import '../widgets/product_details_dialog.dart';
 import '../widgets/ai_gradient_widget.dart';
 import 'package:animated_quiz_widget/quiz_view.dart';
 import 'package:flutter/material.dart';
@@ -501,7 +503,10 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
                     final product = state.products[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
-                      child: SuggestedProductView(product: product),
+                      child: SuggestedProductView(
+                        product: product,
+                        onTap: () => _showProductDetails(context, product),
+                      ),
                     );
                   },
                 ),
@@ -510,6 +515,13 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
           ),
         ),
       ),
+    );
+  }
+
+  void _showProductDetails(BuildContext context, Product product) {
+    showDialog(
+      context: context,
+      builder: (context) => ProductDetailsDialog(product: product),
     );
   }
 }
