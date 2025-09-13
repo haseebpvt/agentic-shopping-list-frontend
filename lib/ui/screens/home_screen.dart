@@ -72,6 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<LocalShoppingListBloc>().add(LoadLocalShoppingList());
     // Check for uncategorized items and identify them
     context.read<LocalShoppingListBloc>().add(IdentifyUncategorizedItems());
+    // Load AI suggestions for the count
+    context.read<ShoppingListBloc>().add(LoadShoppingList(userId: _userId));
   }
 
   void _onCameraButtonPressed() {
@@ -82,6 +84,8 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<LocalShoppingListBloc>().add(LoadLocalShoppingList());
     // Also check for uncategorized items on refresh
     context.read<LocalShoppingListBloc>().add(IdentifyUncategorizedItems());
+    // Refresh AI suggestions count
+    context.read<ShoppingListBloc>().add(RefreshShoppingList(userId: _userId));
   }
 
   void _openAiSuggestions() {
@@ -456,20 +460,69 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'AI Suggestions',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Row(
+                                children: [
+                                  const Text(
+                                    'AI Suggestions',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  BlocBuilder<ShoppingListBloc, ShoppingListState>(
+                                    builder: (context, state) {
+                                      if (state is ShoppingListLoaded) {
+                                        return Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.3),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            '${state.items.length}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        );
+                                      } else if (state is ShoppingListLoading) {
+                                        return Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.3),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: const SizedBox(
+                                            width: 12,
+                                            height: 12,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 4),
-                              Text(
+                              const SizedBox(height: 4),
+                              const Text(
                                 'Tap to view personalized suggestions',
                                 style: TextStyle(
                                   color: Colors.white,
