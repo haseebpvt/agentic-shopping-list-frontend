@@ -9,11 +9,7 @@ class VoiceRecordingWidget extends StatefulWidget {
   final String userId;
   final VoidCallback? onClose;
 
-  const VoiceRecordingWidget({
-    super.key,
-    required this.userId,
-    this.onClose,
-  });
+  const VoiceRecordingWidget({super.key, required this.userId, this.onClose});
 
   @override
   State<VoiceRecordingWidget> createState() => _VoiceRecordingWidgetState();
@@ -25,7 +21,7 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
   late AnimationController _waveController;
   late Animation<double> _pulseAnimation;
   late Animation<double> _waveAnimation;
-  
+
   late SpeechToTextService _speechService;
   bool _isRecording = false;
   bool _isProcessing = false;
@@ -36,36 +32,28 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize speech service with OpenAI API key
     _speechService = SpeechToTextService(ApiConstants.openAiApiKey);
-    
+
     // Initialize animations
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     _waveController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.3,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
-    _waveAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _waveController,
-      curve: Curves.easeInOut,
-    ));
+    _waveAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _waveController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -110,7 +98,7 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
     try {
       // Start streaming transcription
       final transcriptStream = _speechService.startStreamingTranscription();
-      
+
       // Listen to real-time progress updates
       _transcriptSubscription = transcriptStream.listen(
         (message) {
@@ -139,7 +127,7 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
         _status = 'Recording... Real-time transcription active';
         _currentTranscript = '';
       });
-      
+
       // Start animations
       _pulseController.repeat(reverse: true);
       _waveController.repeat(reverse: true);
@@ -167,10 +155,10 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
 
     // Stop the actual recording
     final audioPath = await _speechService.stopRecording();
-    
+
     // Use the current transcript from streaming
     final finalTranscript = _currentTranscript.trim();
-    
+
     if (finalTranscript.isNotEmpty) {
       setState(() {
         _status = 'Sending to AI...';
@@ -202,10 +190,10 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
 
         print("🚀 Performing fast transcription on completed recording");
         final transcription = await _speechService.transcribeAudio(audioPath);
-        
+
         if (transcription != null && transcription.isNotEmpty) {
           print("🚀 Fast transcription result: $transcription");
-          
+
           setState(() {
             _status = 'Sending to AI...';
           });
@@ -255,15 +243,18 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _isRecording 
-                    ? Colors.red 
-                    : _isProcessing 
-                        ? Colors.orange 
-                        : Theme.of(context).primaryColor,
+                color: _isRecording
+                    ? Colors.red
+                    : _isProcessing
+                    ? Colors.orange
+                    : Theme.of(context).primaryColor,
                 boxShadow: [
                   BoxShadow(
-                    color: (_isRecording ? Colors.red : Theme.of(context).primaryColor)
-                        .withOpacity(0.3),
+                    color:
+                        (_isRecording
+                                ? Colors.red
+                                : Theme.of(context).primaryColor)
+                            .withOpacity(0.3),
                     blurRadius: 20,
                     spreadRadius: _isRecording ? 10 : 5,
                   ),
@@ -327,24 +318,24 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
             ),
           ),
           const SizedBox(height: 20),
-          
+
           // Title
           Text(
             'Voice Input',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
-          
+
           // Wave animation
           _buildWaveAnimation(),
           if (_isRecording) const SizedBox(height: 20),
-          
+
           // Microphone button
           _buildMicrophoneButton(),
           const SizedBox(height: 20),
-          
+
           // Status text
           Text(
             _status,
@@ -354,7 +345,7 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
-          
+
           // Real-time transcript display
           if (_currentTranscript.isNotEmpty) ...[
             Container(
@@ -380,10 +371,11 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
                       const SizedBox(width: 8),
                       Text(
                         'Real-time Transcript:',
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                     ],
                   ),
@@ -400,13 +392,10 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
             ),
             const SizedBox(height: 20),
           ],
-          
+
           // Close button
           if (!_isRecording && !_isProcessing)
-            TextButton(
-              onPressed: widget.onClose,
-              child: const Text('Close'),
-            ),
+            TextButton(onPressed: widget.onClose, child: const Text('Close')),
         ],
       ),
     );
@@ -432,10 +421,11 @@ class WavePainter extends CustomPainter {
     path.moveTo(0, size.height / 2);
 
     for (double i = 0; i <= size.width; i++) {
-      final y = size.height / 2 + 
-          waveHeight * 
-          math.sin(i / waveLength * 2 * math.pi) * 
-          math.sin(animationValue * 2 * math.pi);
+      final y =
+          size.height / 2 +
+          waveHeight *
+              math.sin(i / waveLength * 2 * math.pi) *
+              math.sin(animationValue * 2 * math.pi);
       path.lineTo(i, y);
     }
 
@@ -445,4 +435,3 @@ class WavePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
-
