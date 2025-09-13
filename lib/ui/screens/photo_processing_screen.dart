@@ -132,9 +132,6 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
               ),
             ),
 
-            // Back button
-            _buildBackButton(),
-
             // AI Gradient overlay (only during loading)
             BlocBuilder<ProductSuggestionBloc, ProductSuggestionState>(
               builder: (context, state) {
@@ -148,6 +145,9 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
 
             // Progressive card stack from bottom
             _buildProgressiveCards(),
+            
+            // Back button (placed last to be on top of other elements)
+            _buildBackButton(),
           ],
         ),
       ),
