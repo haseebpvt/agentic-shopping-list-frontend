@@ -317,23 +317,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Text(
-                            'Quantity: ${item.quantity}',
-                            style: TextStyle(
-                              color: Theme.of(context).hintColor,
-                              fontSize: 14,
-                            ),
-                          ),
-                          if (item.unit.isNotEmpty) ...[
-                            const SizedBox(width: 4),
-                            Text(
-                              item.unit,
+                          Expanded(
+                            child: Text(
+                              'Quantity: ${item.quantity}${item.unit.isNotEmpty ? ' ${item.unit}' : ''}',
                               style: TextStyle(
                                 color: Theme.of(context).hintColor,
                                 fontSize: 14,
                               ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
                             ),
-                          ],
+                          ),
                         ],
                       ),
                     ],
