@@ -875,16 +875,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         FloatingActionButton(
+                          heroTag: "camera_fab",
                           onPressed: _onCameraButtonPressed,
                           backgroundColor: Theme.of(context).colorScheme.secondary,
                           child: const Icon(Icons.camera_alt),
                         ),
                         FloatingActionButton(
+                          heroTag: "voice_fab",
                           onPressed: _showVoiceRecording,
                           backgroundColor: Colors.green,
                           child: const Icon(Icons.mic),
                         ),
                         FloatingActionButton(
+                          heroTag: "add_fab",
                           onPressed: () => _showAddItemBottomSheet(),
                           child: const Icon(Icons.add),
                         ),
