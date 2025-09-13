@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:advanced_shopping_list_frontend/core/bloc/product_suggestion/product_suggestion.dart';
 import 'package:advanced_shopping_list_frontend/core/models/model/quiz_resume/quiz_resume.dart';
 import '../widgets/suggested_product_view.dart';
+import '../widgets/ai_gradient_widget.dart';
 import 'package:animated_quiz_widget/quiz_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,6 +32,9 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
   
   // Cache flag to track if we need to rebuild the background image
   bool _backgroundImageCacheInvalid = true;
+  
+  // Store quiz data to keep it visible
+  ProductSuggestionQuizRequired? _quizData;
 
   @override
   void initState() {
@@ -93,7 +97,8 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
       body: BlocListener<ProductSuggestionBloc, ProductSuggestionState>(
         listener: (context, state) {
           if (state is ProductSuggestionQuizRequired) {
-            // Animate quiz card when quiz is required
+            // Store quiz data and animate quiz card when quiz is required
+            _quizData = state;
             Future.delayed(const Duration(milliseconds: 300), () {
               if (mounted) {
                 _quizCardController.forward();
@@ -127,6 +132,17 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
 
             // Back button
             _buildBackButton(),
+
+            // AI Gradient overlay (only during loading)
+            BlocBuilder<ProductSuggestionBloc, ProductSuggestionState>(
+              builder: (context, state) {
+                final isLoading = state is ProductSuggestionLoading || state is QuizSubmissionLoading;
+                return AIGradientWidget(
+                  isVisible: isLoading,
+                  heightPercentage: 0.3, // Cover 30% of screen from bottom with nice fade
+                );
+              },
+            ),
 
             // Progressive card stack from bottom
             _buildProgressiveCards(),
@@ -213,6 +229,7 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
     );
   }
 
+
   Widget _buildProgressiveCards() {
     return BlocBuilder<ProductSuggestionBloc, ProductSuggestionState>(
       buildWhen: (previous, current) {
@@ -226,40 +243,44 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
         return true;
       },
       builder: (context, state) {
-        return Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Status/Progress Card (always visible)
-                SlideTransition(
-                  position: _statusCardAnimation,
-                  child: _buildStatusCard(state),
-                ),
-
-                // Quiz Card (visible when quiz is required or completed)
-                if (state is ProductSuggestionQuizRequired || 
-                    (state is ProductSuggestionSuccess && _quizCardController.isCompleted)) ...[
-                  const SizedBox(height: 12),
+        return Positioned.fill(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Add spacing to push content below the image header
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.5),
+                  
+                  // Status/Progress Card (always visible)
                   SlideTransition(
-                    position: _quizCardAnimation,
-                    child: _buildQuizCard(state),
+                    position: _statusCardAnimation,
+                    child: _buildStatusCard(state),
                   ),
-                ],
 
-                // Results Card (visible when results are available)
-                if (state is ProductSuggestionSuccess) ...[
-                  const SizedBox(height: 12),
-                  SlideTransition(
-                    position: _resultsCardAnimation,
-                    child: _buildResultsCard(state),
-                  ),
+                  // Quiz Card (visible when quiz data is available)
+                  if (_quizData != null) ...[
+                    const SizedBox(height: 12),
+                    SlideTransition(
+                      position: _quizCardAnimation,
+                      child: _buildQuizCard(state),
+                    ),
+                  ],
+
+                  // Results Card (visible when results are available)
+                  if (state is ProductSuggestionSuccess) ...[
+                    const SizedBox(height: 12),
+                    SlideTransition(
+                      position: _resultsCardAnimation,
+                      child: _buildResultsCard(state),
+                    ),
+                  ],
+                  
+                  // Add bottom padding for better scrolling experience
+                  const SizedBox(height: 100),
                 ],
-              ],
+              ),
             ),
           ),
         );
@@ -295,16 +316,17 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Use repaint boundary to isolate loading indicator animation
+            // Loading animation or status icon positioned above text
             RepaintBoundary(
               child: isLoading
                   ? Padding(
-                      padding: const EdgeInsets.only(right: 16.0),
+                      padding: const EdgeInsets.only(bottom: 16.0),
                       child: SizedBox(
-                        width: 32,
-                        height: 32,
+                        width: 100, // Even bigger size
+                        height: 100, // Even bigger size
                         child: Lottie.asset(
                           'assets/ai_loading.json',
                           repeat: true,
@@ -313,7 +335,7 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
                       ),
                     )
                   : Padding(
-                      padding: const EdgeInsets.only(right: 16.0),
+                      padding: const EdgeInsets.only(bottom: 16.0),
                       child: Icon(
                         state is ProductSuggestionError 
                             ? Icons.error_outline 
@@ -325,16 +347,16 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
                             : state is ProductSuggestionSuccess
                                 ? Colors.green
                                 : Theme.of(context).primaryColor,
-                        size: 24,
+                        size: 48, // Bigger icon size
                       ),
                     ),
             ),
-            Expanded(
-              child: Text(
-                message,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+            // Message text below the animation/icon
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -344,76 +366,90 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
   }
 
   Widget _buildQuizCard(ProductSuggestionState state) {
-    // For ProductSuggestionSuccess state, we need to get the quiz data from the previous state
-    // This is a simplified approach - in a real app you might want to store this data separately
-    if (state is! ProductSuggestionQuizRequired) {
-      // If we're in success state but quiz was completed, show a completed state
-      return Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.5,
+    // Use stored quiz data if available
+    final quizData = _quizData;
+    if (quizData == null) return Container();
+    
+    // If we're in success state but quiz was completed, show a completed state
+    if (state is ProductSuggestionSuccess) {
+      return Card(
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.check_circle_outlined,
-                    color: Colors.green,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "Quiz Completed",
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.3,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle_outlined,
+                      color: Colors.green,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                "Thank you for providing additional information. Your responses have been processed.",
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
+                    const SizedBox(width: 12),
+                    Text(
+                      "Quiz Completed",
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Thank you for providing additional information. Your responses have been processed.",
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
     
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.5,
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Flexible(
-            child: QuizWidget(
-              questions: (state as ProductSuggestionQuizRequired).quizQuestions,
-              onQuizCompleted: (data) {
-                final questionAndAnswers = data.map((item) {
-                  return "${item.question}: ${item.selectedAnswer}";
-                }).toList();
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.5,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Flexible(
+              child: QuizWidget(
+                questions: quizData.quizQuestions,
+                onQuizCompleted: (data) {
+                  final questionAndAnswers = data.map((item) {
+                    return "${item.question}: ${item.selectedAnswer}";
+                  }).toList();
 
-                print("📝 Submitting quiz with ${questionAndAnswers.length} answers");
-                print("📝 Thread ID: ${(state as ProductSuggestionQuizRequired).threadId}");
-                context.read<ProductSuggestionBloc>().add(
-                  SubmitQuizEvent(
-                    quizRequest: QuizResumeRequest(
-                      threadId: (state as ProductSuggestionQuizRequired).threadId,
-                      questionAndAnswers: questionAndAnswers,
+                  print("📝 Submitting quiz with ${questionAndAnswers.length} answers");
+                  print("📝 Thread ID: ${quizData.threadId}");
+                  context.read<ProductSuggestionBloc>().add(
+                    SubmitQuizEvent(
+                      quizRequest: QuizResumeRequest(
+                        threadId: quizData.threadId,
+                        questionAndAnswers: questionAndAnswers,
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
