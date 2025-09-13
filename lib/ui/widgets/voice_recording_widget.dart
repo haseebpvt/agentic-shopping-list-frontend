@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,6 +30,8 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
   bool _isRecording = false;
   bool _isProcessing = false;
   String _status = 'Tap to start recording';
+  String _currentTranscript = '';
+  StreamSubscription<String>? _transcriptSubscription;
 
   @override
   void initState() {
@@ -67,6 +70,7 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
 
   @override
   void dispose() {
+    _transcriptSubscription?.cancel();
     _pulseController.dispose();
     _waveController.dispose();
     _speechService.dispose();
@@ -100,22 +104,48 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
     }
 
     setState(() {
-      _status = 'Starting recording...';
+      _status = 'Starting streaming transcription...';
     });
 
-    final started = await _speechService.startRecording();
-    if (started) {
+    try {
+      // Start streaming transcription
+      final transcriptStream = _speechService.startStreamingTranscription();
+      
+      // Listen to real-time progress updates
+      _transcriptSubscription = transcriptStream.listen(
+        (message) {
+          setState(() {
+            if (message.startsWith('🎤')) {
+              // This is a progress message, not a transcript
+              _status = message;
+            } else {
+              // This is an actual transcript
+              _currentTranscript = message;
+              _status = 'Listening... Real-time transcript below';
+            }
+          });
+          print("🎤 REAL-TIME UPDATE: $message");
+        },
+        onError: (error) {
+          print("❌ Transcript stream error: $error");
+          setState(() {
+            _status = 'Recording error: $error';
+          });
+        },
+      );
+
       setState(() {
         _isRecording = true;
-        _status = 'Recording... Tap to stop';
+        _status = 'Recording... Real-time transcription active';
+        _currentTranscript = '';
       });
       
       // Start animations
       _pulseController.repeat(reverse: true);
       _waveController.repeat(reverse: true);
-    } else {
+    } catch (e) {
       setState(() {
-        _status = 'Failed to start recording';
+        _status = 'Failed to start streaming: $e';
       });
     }
   }
@@ -123,51 +153,87 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
   Future<void> _stopRecording() async {
     setState(() {
       _isProcessing = true;
-      _status = 'Processing...';
+      _status = 'Finalizing transcription...';
     });
 
     // Stop animations
     _pulseController.stop();
     _waveController.stop();
 
+    // Stop streaming transcription
+    _speechService.stopStreamingTranscription();
+    await _transcriptSubscription?.cancel();
+    _transcriptSubscription = null;
+
+    // Stop the actual recording
     final audioPath = await _speechService.stopRecording();
     
-    if (audioPath != null) {
+    // Use the current transcript from streaming
+    final finalTranscript = _currentTranscript.trim();
+    
+    if (finalTranscript.isNotEmpty) {
       setState(() {
-        _status = 'Transcribing...';
+        _status = 'Sending to AI...';
       });
 
-      final transcription = await _speechService.transcribeAudio(audioPath);
-      
-      if (transcription != null && transcription.isNotEmpty) {
+      print("🚀 Final transcript being sent to AI: $finalTranscript");
+
+      // Send transcription to the same API used by AI suggestions
+      context.read<ShoppingListBloc>().add(
+        InsertData(userId: widget.userId, userText: finalTranscript),
+      );
+
+      setState(() {
+        _status = 'Done! Added: "$finalTranscript"';
+      });
+
+      // Close the widget after a short delay
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          widget.onClose?.call();
+        }
+      });
+    } else {
+      // Use fast transcription since no streaming transcript available
+      if (audioPath != null) {
         setState(() {
-          _status = 'Sending to AI...';
+          _status = 'Fast transcription...';
         });
 
-        // Send transcription to the same API used by AI suggestions
-        context.read<ShoppingListBloc>().add(
-          InsertData(userId: widget.userId, userText: transcription),
-        );
+        print("🚀 Performing fast transcription on completed recording");
+        final transcription = await _speechService.transcribeAudio(audioPath);
+        
+        if (transcription != null && transcription.isNotEmpty) {
+          print("🚀 Fast transcription result: $transcription");
+          
+          setState(() {
+            _status = 'Sending to AI...';
+          });
 
-        setState(() {
-          _status = 'Done! Added: "$transcription"';
-        });
+          context.read<ShoppingListBloc>().add(
+            InsertData(userId: widget.userId, userText: transcription),
+          );
 
-        // Close the widget after a short delay
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            widget.onClose?.call();
-          }
-        });
+          setState(() {
+            _status = 'Done! Added: "$transcription"';
+            _currentTranscript = transcription; // Show the final result
+          });
+
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              widget.onClose?.call();
+            }
+          });
+        } else {
+          setState(() {
+            _status = 'Failed to transcribe audio';
+          });
+        }
       } else {
         setState(() {
-          _status = 'Failed to transcribe audio';
+          _status = 'No recording available';
         });
       }
-    } else {
-      setState(() {
-        _status = 'Failed to save recording';
-      });
     }
 
     setState(() {
@@ -288,6 +354,52 @@ class _VoiceRecordingWidgetState extends State<VoiceRecordingWidget>
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
+          
+          // Real-time transcript display
+          if (_currentTranscript.isNotEmpty) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context).primaryColor.withOpacity(0.3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.mic,
+                        color: Theme.of(context).primaryColor,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Real-time Transcript:',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _currentTranscript,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
           
           // Close button
           if (!_isRecording && !_isProcessing)
