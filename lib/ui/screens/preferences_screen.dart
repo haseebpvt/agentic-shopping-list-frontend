@@ -112,85 +112,61 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
 
     return RefreshIndicator(
       onRefresh: _onRefresh,
-      child: Column(
-        children: [
-          // Search result info
-          if (isSearching)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-              child: Text(
-                'Found ${items.length} result${items.length == 1 ? '' : 's'} for "$searchQuery"',
-                style: TextStyle(
-                  color: Theme.of(context).primaryColor,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          // List
-          Expanded(
-            child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                final isOperationInProgress = operationItemId == item.id;
-                
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  elevation: 2,
-                  child: Stack(
-                    children: [
-                      ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).primaryColor,
-                          child: const Icon(
-                            Icons.psychology,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        title: Text(
-                          item.text,
-                          style: TextStyle(
-                            fontSize: 16,
-                            height: 1.3,
-                            color: isOperationInProgress ? Colors.grey : null,
-                          ),
-                        ),
-                        trailing: Icon(
-                          Icons.edit,
-                          color: Colors.grey.shade400,
-                          size: 16,
-                        ),
-                        contentPadding: const EdgeInsets.all(16),
-                        onTap: isOperationInProgress ? null : () => _editPreference(item),
-                      ),
-                      // Loading overlay for operation in progress
-                      if (isOperationInProgress)
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          ),
-                        ),
-                    ],
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final isOperationInProgress = operationItemId == item.id;
+          
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            elevation: 2,
+            child: Stack(
+              children: [
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    child: const Icon(
+                      Icons.psychology,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
-                );
-              },
+                  title: Text(
+                    item.text,
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.3,
+                      color: isOperationInProgress ? Colors.grey : null,
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.edit,
+                    color: Colors.grey.shade400,
+                    size: 16,
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
+                  onTap: isOperationInProgress ? null : () => _editPreference(item),
+                ),
+                // Loading overlay for operation in progress
+                if (isOperationInProgress)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
