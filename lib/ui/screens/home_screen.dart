@@ -254,6 +254,40 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Builds an animated circular checkbox
+  Widget _buildAnimatedCircularCheckbox({
+    required bool isChecked,
+    required ValueChanged<bool?>? onChanged,
+  }) {
+    return GestureDetector(
+      onTap: () => onChanged?.call(!isChecked),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isChecked ? const Color(0xFF4CAF50) : Colors.transparent,
+          border: Border.all(
+            color: isChecked ? const Color(0xFF4CAF50) : Colors.grey,
+            width: 2,
+          ),
+        ),
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 150),
+          scale: isChecked ? 1.0 : 0.0,
+          curve: Curves.elasticOut,
+          child: const Icon(
+            Icons.check,
+            color: Colors.white,
+            size: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Builds an animated list item
   Widget _buildAnimatedListItem({
     required LocalShoppingListItem item,
@@ -271,24 +305,54 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, scale, child) {
           return Transform.scale(
             scale: scale,
-            child: Card(
-              elevation: 2,
-              child: ListTile(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: Card(
+                elevation: item.isPurchased ? 1 : 2,
+                color: item.isPurchased 
+                    ? Theme.of(context).cardColor.withOpacity(0.7)
+                    : Theme.of(context).cardColor,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    border: item.isPurchased 
+                        ? Border.all(
+                            color: const Color(0xFF4CAF50).withOpacity(0.3),
+                            width: 1,
+                          )
+                        : null,
+                  ),
+                  child: ListTile(
                 onTap: () => _showAddItemBottomSheet(item: item),
-                leading: CircleAvatar(
-                  backgroundColor: item.isPurchased 
-                      ? const Color(0xFF4CAF50) 
-                      : Theme.of(context).primaryColor,
-                  child: Icon(
-                    item.isPurchased 
-                        ? Icons.check 
-                        : Icons.shopping_basket,
-                    color: Colors.white,
-                    size: 20,
+                leading: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: CircleAvatar(
+                    backgroundColor: item.isPurchased 
+                        ? const Color(0xFF4CAF50) 
+                        : Theme.of(context).primaryColor,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return ScaleTransition(scale: animation, child: child);
+                      },
+                      child: Icon(
+                        item.isPurchased 
+                            ? Icons.check 
+                            : Icons.shopping_basket,
+                        key: ValueKey(item.isPurchased ? 'check' : 'basket'),
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
                   ),
                 ),
-                title: Text(
-                  item.itemName,
+                title: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -297,8 +361,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         : null,
                     color: item.isPurchased 
                         ? Theme.of(context).disabledColor 
-                        : null,
+                        : Theme.of(context).textTheme.bodyLarge?.color,
                   ),
+                  child: Text(item.itemName),
                 ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,8 +414,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : Checkbox(
-                              value: item.isPurchased,
+                          : _buildAnimatedCircularCheckbox(
+                              isChecked: item.isPurchased,
                               onChanged: (bool? value) {
                                 if (value != null && item.id != null) {
                                   context.read<LocalShoppingListBloc>().add(
@@ -361,7 +426,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   );
                                 }
                               },
-                              activeColor: const Color(0xFF4CAF50),
                             );
                       },
                     ),
@@ -377,6 +441,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Theme.of(context).colorScheme.error,
                     ),
                   ],
+                ),
+                  ),
                 ),
               ),
             ),
