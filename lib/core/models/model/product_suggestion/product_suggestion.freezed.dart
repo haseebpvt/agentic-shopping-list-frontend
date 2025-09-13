@@ -670,16 +670,12 @@ Product _$ProductFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Product {
-  int? get id =>
-      throw _privateConstructorUsedError; // Server item ID (null for AI suggestions, set after adding to server)
   String get name => throw _privateConstructorUsedError;
   @JsonKey(name: 'reason_for_suggestion')
   String get reasonForSuggestion => throw _privateConstructorUsedError;
   String? get note => throw _privateConstructorUsedError;
   @JsonKey(name: 'obvious_choice')
   bool get obviousChoice => throw _privateConstructorUsedError;
-  @JsonKey(name: 'is_purchased')
-  bool get isPurchased => throw _privateConstructorUsedError;
 
   /// Serializes this Product to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -696,12 +692,10 @@ abstract class $ProductCopyWith<$Res> {
       _$ProductCopyWithImpl<$Res, Product>;
   @useResult
   $Res call({
-    int? id,
     String name,
     @JsonKey(name: 'reason_for_suggestion') String reasonForSuggestion,
     String? note,
     @JsonKey(name: 'obvious_choice') bool obviousChoice,
-    @JsonKey(name: 'is_purchased') bool isPurchased,
   });
 }
 
@@ -720,19 +714,13 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = freezed,
     Object? name = null,
     Object? reasonForSuggestion = null,
     Object? note = freezed,
     Object? obviousChoice = null,
-    Object? isPurchased = null,
   }) {
     return _then(
       _value.copyWith(
-            id: freezed == id
-                ? _value.id
-                : id // ignore: cast_nullable_to_non_nullable
-                      as int?,
             name: null == name
                 ? _value.name
                 : name // ignore: cast_nullable_to_non_nullable
@@ -749,10 +737,6 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
                 ? _value.obviousChoice
                 : obviousChoice // ignore: cast_nullable_to_non_nullable
                       as bool,
-            isPurchased: null == isPurchased
-                ? _value.isPurchased
-                : isPurchased // ignore: cast_nullable_to_non_nullable
-                      as bool,
           )
           as $Val,
     );
@@ -768,12 +752,10 @@ abstract class _$$ProductImplCopyWith<$Res> implements $ProductCopyWith<$Res> {
   @override
   @useResult
   $Res call({
-    int? id,
     String name,
     @JsonKey(name: 'reason_for_suggestion') String reasonForSuggestion,
     String? note,
     @JsonKey(name: 'obvious_choice') bool obviousChoice,
-    @JsonKey(name: 'is_purchased') bool isPurchased,
   });
 }
 
@@ -791,19 +773,13 @@ class __$$ProductImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = freezed,
     Object? name = null,
     Object? reasonForSuggestion = null,
     Object? note = freezed,
     Object? obviousChoice = null,
-    Object? isPurchased = null,
   }) {
     return _then(
       _$ProductImpl(
-        id: freezed == id
-            ? _value.id
-            : id // ignore: cast_nullable_to_non_nullable
-                  as int?,
         name: null == name
             ? _value.name
             : name // ignore: cast_nullable_to_non_nullable
@@ -820,10 +796,6 @@ class __$$ProductImplCopyWithImpl<$Res>
             ? _value.obviousChoice
             : obviousChoice // ignore: cast_nullable_to_non_nullable
                   as bool,
-        isPurchased: null == isPurchased
-            ? _value.isPurchased
-            : isPurchased // ignore: cast_nullable_to_non_nullable
-                  as bool,
       ),
     );
   }
@@ -833,20 +805,15 @@ class __$$ProductImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$ProductImpl implements _Product {
   const _$ProductImpl({
-    this.id,
     required this.name,
     @JsonKey(name: 'reason_for_suggestion') required this.reasonForSuggestion,
     this.note,
     @JsonKey(name: 'obvious_choice') required this.obviousChoice,
-    @JsonKey(name: 'is_purchased') this.isPurchased = false,
   });
 
   factory _$ProductImpl.fromJson(Map<String, dynamic> json) =>
       _$$ProductImplFromJson(json);
 
-  @override
-  final int? id;
-  // Server item ID (null for AI suggestions, set after adding to server)
   @override
   final String name;
   @override
@@ -857,13 +824,10 @@ class _$ProductImpl implements _Product {
   @override
   @JsonKey(name: 'obvious_choice')
   final bool obviousChoice;
-  @override
-  @JsonKey(name: 'is_purchased')
-  final bool isPurchased;
 
   @override
   String toString() {
-    return 'Product(id: $id, name: $name, reasonForSuggestion: $reasonForSuggestion, note: $note, obviousChoice: $obviousChoice, isPurchased: $isPurchased)';
+    return 'Product(name: $name, reasonForSuggestion: $reasonForSuggestion, note: $note, obviousChoice: $obviousChoice)';
   }
 
   @override
@@ -871,28 +835,18 @@ class _$ProductImpl implements _Product {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ProductImpl &&
-            (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.reasonForSuggestion, reasonForSuggestion) ||
                 other.reasonForSuggestion == reasonForSuggestion) &&
             (identical(other.note, note) || other.note == note) &&
             (identical(other.obviousChoice, obviousChoice) ||
-                other.obviousChoice == obviousChoice) &&
-            (identical(other.isPurchased, isPurchased) ||
-                other.isPurchased == isPurchased));
+                other.obviousChoice == obviousChoice));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    id,
-    name,
-    reasonForSuggestion,
-    note,
-    obviousChoice,
-    isPurchased,
-  );
+  int get hashCode =>
+      Object.hash(runtimeType, name, reasonForSuggestion, note, obviousChoice);
 
   /// Create a copy of Product
   /// with the given fields replaced by the non-null parameter values.
@@ -910,19 +864,15 @@ class _$ProductImpl implements _Product {
 
 abstract class _Product implements Product {
   const factory _Product({
-    final int? id,
     required final String name,
     @JsonKey(name: 'reason_for_suggestion')
     required final String reasonForSuggestion,
     final String? note,
     @JsonKey(name: 'obvious_choice') required final bool obviousChoice,
-    @JsonKey(name: 'is_purchased') final bool isPurchased,
   }) = _$ProductImpl;
 
   factory _Product.fromJson(Map<String, dynamic> json) = _$ProductImpl.fromJson;
 
-  @override
-  int? get id; // Server item ID (null for AI suggestions, set after adding to server)
   @override
   String get name;
   @override
@@ -933,9 +883,6 @@ abstract class _Product implements Product {
   @override
   @JsonKey(name: 'obvious_choice')
   bool get obviousChoice;
-  @override
-  @JsonKey(name: 'is_purchased')
-  bool get isPurchased;
 
   /// Create a copy of Product
   /// with the given fields replaced by the non-null parameter values.

@@ -27,6 +27,7 @@ class ShoppingListItem with _$ShoppingListItem {
     @JsonKey(name: 'category_id') required int categoryId,
     @JsonKey(name: 'category_name') required String categoryName,
     @JsonKey(name: 'is_purchased') required bool isPurchased,
+    @JsonKey(name: 'is_ai_suggestion') required bool isAiSuggestion,
     required int timestamp,
   }) = _ShoppingListItem;
 

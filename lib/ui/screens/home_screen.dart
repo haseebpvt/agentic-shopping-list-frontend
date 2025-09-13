@@ -668,7 +668,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Text(
-                                            '${state.items.where((item) => !item.isPurchased).length}',
+                                            '${state.items.where((item) => !item.isPurchased && item.isAiSuggestion).length}',
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 12,

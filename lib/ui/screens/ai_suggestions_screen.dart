@@ -288,7 +288,15 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                               ...categoryItems.map((item) => Card(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 elevation: 2,
-                                child: ListTile(
+                                child: Container(
+                                  decoration: item.isAiSuggestion ? BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.amber.shade400,
+                                      width: 2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ) : null,
+                                  child: ListTile(
                                   onLongPress: () async {
                                     // Show confirmation dialog for deletion
                                     final confirmed = await showDialog<bool>(
@@ -324,9 +332,11 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                                     }
                                   },
                                   leading: CircleAvatar(
-                                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                                    child: const Icon(
-                                      Icons.lightbulb,
+                                    backgroundColor: item.isAiSuggestion 
+                                        ? Colors.amber.shade400 
+                                        : Theme.of(context).colorScheme.secondary,
+                                    child: Icon(
+                                      item.isAiSuggestion ? Icons.auto_awesome : Icons.lightbulb,
                                       color: Colors.white,
                                       size: 20,
                                     ),
@@ -341,6 +351,37 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                                   subtitle: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
+                                      // AI Suggestion Badge
+                                      if (item.isAiSuggestion) ...[
+                                        const SizedBox(height: 4),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.amber.shade100,
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(color: Colors.amber.shade400),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.auto_awesome,
+                                                size: 14,
+                                                color: Colors.amber.shade700,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'AI Suggestion',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.amber.shade700,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                       if (item.note.isNotEmpty) ...[
                                         const SizedBox(height: 4),
                                         Text(
@@ -376,6 +417,7 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                                     onPressed: () => _addToLocalList(item),
                                     color: Theme.of(context).primaryColor,
                                     tooltip: 'Add to shopping list',
+                                  ),
                                   ),
                                 ),
                               )),

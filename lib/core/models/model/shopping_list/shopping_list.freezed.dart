@@ -248,6 +248,8 @@ mixin _$ShoppingListItem {
   String get categoryName => throw _privateConstructorUsedError;
   @JsonKey(name: 'is_purchased')
   bool get isPurchased => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_ai_suggestion')
+  bool get isAiSuggestion => throw _privateConstructorUsedError;
   int get timestamp => throw _privateConstructorUsedError;
 
   /// Serializes this ShoppingListItem to a JSON map.
@@ -277,6 +279,7 @@ abstract class $ShoppingListItemCopyWith<$Res> {
     @JsonKey(name: 'category_id') int categoryId,
     @JsonKey(name: 'category_name') String categoryName,
     @JsonKey(name: 'is_purchased') bool isPurchased,
+    @JsonKey(name: 'is_ai_suggestion') bool isAiSuggestion,
     int timestamp,
   });
 }
@@ -305,6 +308,7 @@ class _$ShoppingListItemCopyWithImpl<$Res, $Val extends ShoppingListItem>
     Object? categoryId = null,
     Object? categoryName = null,
     Object? isPurchased = null,
+    Object? isAiSuggestion = null,
     Object? timestamp = null,
   }) {
     return _then(
@@ -345,6 +349,10 @@ class _$ShoppingListItemCopyWithImpl<$Res, $Val extends ShoppingListItem>
                 ? _value.isPurchased
                 : isPurchased // ignore: cast_nullable_to_non_nullable
                       as bool,
+            isAiSuggestion: null == isAiSuggestion
+                ? _value.isAiSuggestion
+                : isAiSuggestion // ignore: cast_nullable_to_non_nullable
+                      as bool,
             timestamp: null == timestamp
                 ? _value.timestamp
                 : timestamp // ignore: cast_nullable_to_non_nullable
@@ -374,6 +382,7 @@ abstract class _$$ShoppingListItemImplCopyWith<$Res>
     @JsonKey(name: 'category_id') int categoryId,
     @JsonKey(name: 'category_name') String categoryName,
     @JsonKey(name: 'is_purchased') bool isPurchased,
+    @JsonKey(name: 'is_ai_suggestion') bool isAiSuggestion,
     int timestamp,
   });
 }
@@ -401,6 +410,7 @@ class __$$ShoppingListItemImplCopyWithImpl<$Res>
     Object? categoryId = null,
     Object? categoryName = null,
     Object? isPurchased = null,
+    Object? isAiSuggestion = null,
     Object? timestamp = null,
   }) {
     return _then(
@@ -441,6 +451,10 @@ class __$$ShoppingListItemImplCopyWithImpl<$Res>
             ? _value.isPurchased
             : isPurchased // ignore: cast_nullable_to_non_nullable
                   as bool,
+        isAiSuggestion: null == isAiSuggestion
+            ? _value.isAiSuggestion
+            : isAiSuggestion // ignore: cast_nullable_to_non_nullable
+                  as bool,
         timestamp: null == timestamp
             ? _value.timestamp
             : timestamp // ignore: cast_nullable_to_non_nullable
@@ -463,6 +477,7 @@ class _$ShoppingListItemImpl implements _ShoppingListItem {
     @JsonKey(name: 'category_id') required this.categoryId,
     @JsonKey(name: 'category_name') required this.categoryName,
     @JsonKey(name: 'is_purchased') required this.isPurchased,
+    @JsonKey(name: 'is_ai_suggestion') required this.isAiSuggestion,
     required this.timestamp,
   });
 
@@ -493,11 +508,14 @@ class _$ShoppingListItemImpl implements _ShoppingListItem {
   @JsonKey(name: 'is_purchased')
   final bool isPurchased;
   @override
+  @JsonKey(name: 'is_ai_suggestion')
+  final bool isAiSuggestion;
+  @override
   final int timestamp;
 
   @override
   String toString() {
-    return 'ShoppingListItem(userId: $userId, itemName: $itemName, note: $note, quantity: $quantity, unit: $unit, id: $id, categoryId: $categoryId, categoryName: $categoryName, isPurchased: $isPurchased, timestamp: $timestamp)';
+    return 'ShoppingListItem(userId: $userId, itemName: $itemName, note: $note, quantity: $quantity, unit: $unit, id: $id, categoryId: $categoryId, categoryName: $categoryName, isPurchased: $isPurchased, isAiSuggestion: $isAiSuggestion, timestamp: $timestamp)';
   }
 
   @override
@@ -519,6 +537,8 @@ class _$ShoppingListItemImpl implements _ShoppingListItem {
                 other.categoryName == categoryName) &&
             (identical(other.isPurchased, isPurchased) ||
                 other.isPurchased == isPurchased) &&
+            (identical(other.isAiSuggestion, isAiSuggestion) ||
+                other.isAiSuggestion == isAiSuggestion) &&
             (identical(other.timestamp, timestamp) ||
                 other.timestamp == timestamp));
   }
@@ -536,6 +556,7 @@ class _$ShoppingListItemImpl implements _ShoppingListItem {
     categoryId,
     categoryName,
     isPurchased,
+    isAiSuggestion,
     timestamp,
   );
 
@@ -567,6 +588,7 @@ abstract class _ShoppingListItem implements ShoppingListItem {
     @JsonKey(name: 'category_id') required final int categoryId,
     @JsonKey(name: 'category_name') required final String categoryName,
     @JsonKey(name: 'is_purchased') required final bool isPurchased,
+    @JsonKey(name: 'is_ai_suggestion') required final bool isAiSuggestion,
     required final int timestamp,
   }) = _$ShoppingListItemImpl;
 
@@ -596,6 +618,9 @@ abstract class _ShoppingListItem implements ShoppingListItem {
   @override
   @JsonKey(name: 'is_purchased')
   bool get isPurchased;
+  @override
+  @JsonKey(name: 'is_ai_suggestion')
+  bool get isAiSuggestion;
   @override
   int get timestamp;
 
