@@ -414,42 +414,36 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
       );
     }
     
-    return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.5,
       ),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.5,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Flexible(
-              child: QuizWidget(
-                questions: quizData.quizQuestions,
-                onQuizCompleted: (data) {
-                  final questionAndAnswers = data.map((item) {
-                    return "${item.question}: ${item.selectedAnswer}";
-                  }).toList();
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Flexible(
+            child: QuizWidget(
+              questions: quizData.quizQuestions,
+              onQuizCompleted: (data) {
+                final questionAndAnswers = data.map((item) {
+                  return "${item.question}: ${item.selectedAnswer}";
+                }).toList();
 
-                  print("📝 Submitting quiz with ${questionAndAnswers.length} answers");
-                  print("📝 Thread ID: ${quizData.threadId}");
-                  context.read<ProductSuggestionBloc>().add(
-                    SubmitQuizEvent(
-                      quizRequest: QuizResumeRequest(
-                        threadId: quizData.threadId,
-                        questionAndAnswers: questionAndAnswers,
-                      ),
+                print("📝 Submitting quiz with ${questionAndAnswers.length} answers");
+                print("📝 Thread ID: ${quizData.threadId}");
+                context.read<ProductSuggestionBloc>().add(
+                  SubmitQuizEvent(
+                    quizRequest: QuizResumeRequest(
+                      threadId: quizData.threadId,
+                      questionAndAnswers: questionAndAnswers,
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
