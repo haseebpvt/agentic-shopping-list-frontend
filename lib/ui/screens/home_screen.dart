@@ -377,22 +377,35 @@ class _HomeScreenState extends State<HomeScreen> {
                                     size: 20,
                                   ),
                                 )
-                              : CircleAvatar(
-                                  backgroundColor: item.isPurchased 
-                                      ? const Color(0xFF4CAF50) 
-                                      : Theme.of(context).primaryColor,
-                                  child: AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 200),
-                                    transitionBuilder: (Widget child, Animation<double> animation) {
-                                      return ScaleTransition(scale: animation, child: child);
-                                    },
-                                    child: Icon(
-                                      item.isPurchased 
-                                          ? Icons.check 
-                                          : Icons.shopping_basket,
-                                      key: ValueKey(item.isPurchased ? 'check' : 'basket'),
-                                      color: Colors.white,
-                                      size: 20,
+                              : GestureDetector(
+                                  onTap: !hasSelection ? () {
+                                    // Toggle purchased state when tapping the leading icon
+                                    if (item.id != null) {
+                                      context.read<LocalShoppingListBloc>().add(
+                                        ToggleLocalItemPurchased(
+                                          id: item.id!,
+                                          isPurchased: !item.isPurchased,
+                                        ),
+                                      );
+                                    }
+                                  } : null,
+                                  child: CircleAvatar(
+                                    backgroundColor: item.isPurchased 
+                                        ? const Color(0xFF4CAF50) 
+                                        : Theme.of(context).primaryColor,
+                                    child: AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 200),
+                                      transitionBuilder: (Widget child, Animation<double> animation) {
+                                        return ScaleTransition(scale: animation, child: child);
+                                      },
+                                      child: Icon(
+                                        item.isPurchased 
+                                            ? Icons.check 
+                                            : Icons.shopping_basket,
+                                        key: ValueKey(item.isPurchased ? 'check' : 'basket'),
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -449,6 +462,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           builder: (context, state) {
                             final isUpdating = state is LocalShoppingListItemUpdating && 
                                               state.updatingItemId == item.id!;
+                            
+                            // Don't show trailing checkbox if item is already purchased
+                            if (item.isPurchased && !isUpdating) {
+                              return const SizedBox.shrink();
+                            }
                             
                             return isUpdating 
                               ? const SizedBox(
