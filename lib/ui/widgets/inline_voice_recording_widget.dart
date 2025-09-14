@@ -214,13 +214,13 @@ class _InlineVoiceRecordingWidgetState extends State<InlineVoiceRecordingWidget>
           );
 
           // Show success snackbar
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Voice input processed: "$transcription"'),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 3),
-            ),
-          );
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(
+          //     content: Text('Voice input processed: "$transcription"'),
+          //     backgroundColor: Colors.green,
+          //     duration: const Duration(seconds: 3),
+          //   ),
+          // );
         }
       } else {
         _handleRecordingError('Failed to transcribe audio');
@@ -279,15 +279,15 @@ class _InlineVoiceRecordingWidgetState extends State<InlineVoiceRecordingWidget>
               repeat: _currentState == MicState.active,
             ),
           ),
-          // Show circular loading indicator when in loading state
+          // Show smaller circular loading indicator when in loading state
           if (_currentState == MicState.loading)
             FadeTransition(
               opacity: _fadeAnimation,
               child: SizedBox(
-                width: widget.size * 0.4,
-                height: widget.size * 0.4,
+                width: widget.size * 0.2, // Even smaller for internal loading
+                height: widget.size * 0.2,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
+                  strokeWidth: 1.5,
                   valueColor: AlwaysStoppedAnimation<Color>(
                     Theme.of(context).primaryColor,
                   ),
@@ -301,19 +301,38 @@ class _InlineVoiceRecordingWidgetState extends State<InlineVoiceRecordingWidget>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _onMicTap,
-      child: Container(
-        width: widget.size,
-        height: widget.size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: _currentState == MicState.active
-              ? Colors.red.withOpacity(0.1)
-              : Colors.transparent,
-        ),
-        child: _buildLottieAnimation(),
-      ),
+    return BlocBuilder<ShoppingListBloc, ShoppingListState>(
+      builder: (context, state) {
+        final isInserting = state is ShoppingListInserting;
+        
+        return GestureDetector(
+          onTap: isInserting ? null : _onMicTap,
+          child: SizedBox(
+            width: widget.size,
+            height: widget.size,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                _buildLottieAnimation(),
+                // Show API loading overlay when inserting
+                if (isInserting)
+                  Center(
+                    child: SizedBox(
+                      width: widget.size * 0.25, // Smaller loading indicator
+                      height: widget.size * 0.25,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).primaryColor,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
