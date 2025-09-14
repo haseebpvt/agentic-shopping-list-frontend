@@ -240,7 +240,17 @@ mixin _$ShoppingListItem {
   String get itemName => throw _privateConstructorUsedError;
   String get note => throw _privateConstructorUsedError;
   String get quantity => throw _privateConstructorUsedError;
+  String get unit => throw _privateConstructorUsedError;
   int get id => throw _privateConstructorUsedError;
+  @JsonKey(name: 'category_id')
+  int get categoryId => throw _privateConstructorUsedError;
+  @JsonKey(name: 'category_name')
+  String get categoryName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_purchased')
+  bool get isPurchased => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_ai_suggestion')
+  bool get isAiSuggestion => throw _privateConstructorUsedError;
+  int get timestamp => throw _privateConstructorUsedError;
 
   /// Serializes this ShoppingListItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -264,7 +274,13 @@ abstract class $ShoppingListItemCopyWith<$Res> {
     @JsonKey(name: 'item_name') String itemName,
     String note,
     String quantity,
+    String unit,
     int id,
+    @JsonKey(name: 'category_id') int categoryId,
+    @JsonKey(name: 'category_name') String categoryName,
+    @JsonKey(name: 'is_purchased') bool isPurchased,
+    @JsonKey(name: 'is_ai_suggestion') bool isAiSuggestion,
+    int timestamp,
   });
 }
 
@@ -287,7 +303,13 @@ class _$ShoppingListItemCopyWithImpl<$Res, $Val extends ShoppingListItem>
     Object? itemName = null,
     Object? note = null,
     Object? quantity = null,
+    Object? unit = null,
     Object? id = null,
+    Object? categoryId = null,
+    Object? categoryName = null,
+    Object? isPurchased = null,
+    Object? isAiSuggestion = null,
+    Object? timestamp = null,
   }) {
     return _then(
       _value.copyWith(
@@ -307,9 +329,33 @@ class _$ShoppingListItemCopyWithImpl<$Res, $Val extends ShoppingListItem>
                 ? _value.quantity
                 : quantity // ignore: cast_nullable_to_non_nullable
                       as String,
+            unit: null == unit
+                ? _value.unit
+                : unit // ignore: cast_nullable_to_non_nullable
+                      as String,
             id: null == id
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
+                      as int,
+            categoryId: null == categoryId
+                ? _value.categoryId
+                : categoryId // ignore: cast_nullable_to_non_nullable
+                      as int,
+            categoryName: null == categoryName
+                ? _value.categoryName
+                : categoryName // ignore: cast_nullable_to_non_nullable
+                      as String,
+            isPurchased: null == isPurchased
+                ? _value.isPurchased
+                : isPurchased // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isAiSuggestion: null == isAiSuggestion
+                ? _value.isAiSuggestion
+                : isAiSuggestion // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            timestamp: null == timestamp
+                ? _value.timestamp
+                : timestamp // ignore: cast_nullable_to_non_nullable
                       as int,
           )
           as $Val,
@@ -331,7 +377,13 @@ abstract class _$$ShoppingListItemImplCopyWith<$Res>
     @JsonKey(name: 'item_name') String itemName,
     String note,
     String quantity,
+    String unit,
     int id,
+    @JsonKey(name: 'category_id') int categoryId,
+    @JsonKey(name: 'category_name') String categoryName,
+    @JsonKey(name: 'is_purchased') bool isPurchased,
+    @JsonKey(name: 'is_ai_suggestion') bool isAiSuggestion,
+    int timestamp,
   });
 }
 
@@ -353,7 +405,13 @@ class __$$ShoppingListItemImplCopyWithImpl<$Res>
     Object? itemName = null,
     Object? note = null,
     Object? quantity = null,
+    Object? unit = null,
     Object? id = null,
+    Object? categoryId = null,
+    Object? categoryName = null,
+    Object? isPurchased = null,
+    Object? isAiSuggestion = null,
+    Object? timestamp = null,
   }) {
     return _then(
       _$ShoppingListItemImpl(
@@ -373,9 +431,33 @@ class __$$ShoppingListItemImplCopyWithImpl<$Res>
             ? _value.quantity
             : quantity // ignore: cast_nullable_to_non_nullable
                   as String,
+        unit: null == unit
+            ? _value.unit
+            : unit // ignore: cast_nullable_to_non_nullable
+                  as String,
         id: null == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
+                  as int,
+        categoryId: null == categoryId
+            ? _value.categoryId
+            : categoryId // ignore: cast_nullable_to_non_nullable
+                  as int,
+        categoryName: null == categoryName
+            ? _value.categoryName
+            : categoryName // ignore: cast_nullable_to_non_nullable
+                  as String,
+        isPurchased: null == isPurchased
+            ? _value.isPurchased
+            : isPurchased // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isAiSuggestion: null == isAiSuggestion
+            ? _value.isAiSuggestion
+            : isAiSuggestion // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        timestamp: null == timestamp
+            ? _value.timestamp
+            : timestamp // ignore: cast_nullable_to_non_nullable
                   as int,
       ),
     );
@@ -390,7 +472,13 @@ class _$ShoppingListItemImpl implements _ShoppingListItem {
     @JsonKey(name: 'item_name') required this.itemName,
     required this.note,
     required this.quantity,
+    required this.unit,
     required this.id,
+    @JsonKey(name: 'category_id') required this.categoryId,
+    @JsonKey(name: 'category_name') required this.categoryName,
+    @JsonKey(name: 'is_purchased') required this.isPurchased,
+    @JsonKey(name: 'is_ai_suggestion') required this.isAiSuggestion,
+    required this.timestamp,
   });
 
   factory _$ShoppingListItemImpl.fromJson(Map<String, dynamic> json) =>
@@ -407,11 +495,27 @@ class _$ShoppingListItemImpl implements _ShoppingListItem {
   @override
   final String quantity;
   @override
+  final String unit;
+  @override
   final int id;
+  @override
+  @JsonKey(name: 'category_id')
+  final int categoryId;
+  @override
+  @JsonKey(name: 'category_name')
+  final String categoryName;
+  @override
+  @JsonKey(name: 'is_purchased')
+  final bool isPurchased;
+  @override
+  @JsonKey(name: 'is_ai_suggestion')
+  final bool isAiSuggestion;
+  @override
+  final int timestamp;
 
   @override
   String toString() {
-    return 'ShoppingListItem(userId: $userId, itemName: $itemName, note: $note, quantity: $quantity, id: $id)';
+    return 'ShoppingListItem(userId: $userId, itemName: $itemName, note: $note, quantity: $quantity, unit: $unit, id: $id, categoryId: $categoryId, categoryName: $categoryName, isPurchased: $isPurchased, isAiSuggestion: $isAiSuggestion, timestamp: $timestamp)';
   }
 
   @override
@@ -425,13 +529,36 @@ class _$ShoppingListItemImpl implements _ShoppingListItem {
             (identical(other.note, note) || other.note == note) &&
             (identical(other.quantity, quantity) ||
                 other.quantity == quantity) &&
-            (identical(other.id, id) || other.id == id));
+            (identical(other.unit, unit) || other.unit == unit) &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.categoryId, categoryId) ||
+                other.categoryId == categoryId) &&
+            (identical(other.categoryName, categoryName) ||
+                other.categoryName == categoryName) &&
+            (identical(other.isPurchased, isPurchased) ||
+                other.isPurchased == isPurchased) &&
+            (identical(other.isAiSuggestion, isAiSuggestion) ||
+                other.isAiSuggestion == isAiSuggestion) &&
+            (identical(other.timestamp, timestamp) ||
+                other.timestamp == timestamp));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, userId, itemName, note, quantity, id);
+  int get hashCode => Object.hash(
+    runtimeType,
+    userId,
+    itemName,
+    note,
+    quantity,
+    unit,
+    id,
+    categoryId,
+    categoryName,
+    isPurchased,
+    isAiSuggestion,
+    timestamp,
+  );
 
   /// Create a copy of ShoppingListItem
   /// with the given fields replaced by the non-null parameter values.
@@ -456,7 +583,13 @@ abstract class _ShoppingListItem implements ShoppingListItem {
     @JsonKey(name: 'item_name') required final String itemName,
     required final String note,
     required final String quantity,
+    required final String unit,
     required final int id,
+    @JsonKey(name: 'category_id') required final int categoryId,
+    @JsonKey(name: 'category_name') required final String categoryName,
+    @JsonKey(name: 'is_purchased') required final bool isPurchased,
+    @JsonKey(name: 'is_ai_suggestion') required final bool isAiSuggestion,
+    required final int timestamp,
   }) = _$ShoppingListItemImpl;
 
   factory _ShoppingListItem.fromJson(Map<String, dynamic> json) =
@@ -473,7 +606,23 @@ abstract class _ShoppingListItem implements ShoppingListItem {
   @override
   String get quantity;
   @override
+  String get unit;
+  @override
   int get id;
+  @override
+  @JsonKey(name: 'category_id')
+  int get categoryId;
+  @override
+  @JsonKey(name: 'category_name')
+  String get categoryName;
+  @override
+  @JsonKey(name: 'is_purchased')
+  bool get isPurchased;
+  @override
+  @JsonKey(name: 'is_ai_suggestion')
+  bool get isAiSuggestion;
+  @override
+  int get timestamp;
 
   /// Create a copy of ShoppingListItem
   /// with the given fields replaced by the non-null parameter values.

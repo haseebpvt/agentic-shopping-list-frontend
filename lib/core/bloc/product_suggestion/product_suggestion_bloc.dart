@@ -28,9 +28,9 @@ class ProductSuggestionBloc extends Bloc<ProductSuggestionEvent, ProductSuggesti
         onData: (data) {
           print("📡 Received stream data: type=${data.type}, message=${data.message}, threadId=${data.threadId}");
           print("📡 Quiz data: ${data.quiz}");
-          print("📡 Suggestion data: ${data.suggestion}");
+          print("📡 Products data: ${data.products}");
           
-          if (data.type == "quiz_interrupt" || data.type == "quiz") {
+          if (data.type == "quiz_interrupt") {
             // Quiz is required
             final quizQuestions = data.quiz?.quiz?.map((item) {
               return quiz_widget.QuizQuestion(
@@ -52,17 +52,50 @@ class ProductSuggestionBloc extends Bloc<ProductSuggestionEvent, ProductSuggesti
               threadId: data.threadId ?? "",
               message: data.message,
             );
-          } else if (data.type == "suggestion" && data.suggestion?.products != null) {
-            // Direct suggestions without quiz
-            print("📡 Found ${data.suggestion!.products!.length} products");
+          } else if (data.products != null && data.products!.isNotEmpty) {
+            // Direct suggestions from SuggestedProductList
+            print("📡 Found ${data.products!.length} products");
             return ProductSuggestionSuccess(
-              products: data.suggestion!.products!,
-              message: data.message,
+              products: data.products!,
+              message: data.message.isNotEmpty ? data.message : "Analysis complete!",
             );
           } else {
             // Stream update - show the message in loading state
-            print("📡 Stream update: ${data.message}");
-            return ProductSuggestionLoading(message: data.message);
+            // Handle custom stream messages for workflow progress
+            String displayMessage = data.message.trim();
+            
+            // If message is empty, try to extract meaningful info from type
+            if (displayMessage.isEmpty) {
+              if (data.type.isNotEmpty) {
+                // Convert type to readable message
+                switch (data.type.toLowerCase()) {
+                  case 'image_analysis':
+                    displayMessage = "Analyzing image...";
+                    break;
+                  case 'product_extraction':
+                    displayMessage = "Extracting products...";
+                    break;
+                  case 'preference_matching':
+                    displayMessage = "Matching preferences...";
+                    break;
+                  case 'generating_suggestions':
+                    displayMessage = "Generating suggestions...";
+                    break;
+                  default:
+                    displayMessage = data.type.replaceAll('_', ' ').toLowerCase();
+                    if (displayMessage.isNotEmpty) {
+                      displayMessage = displayMessage[0].toUpperCase() + displayMessage.substring(1) + "...";
+                    } else {
+                      displayMessage = "Processing...";
+                    }
+                }
+              } else {
+                displayMessage = "Processing image...";
+              }
+            }
+            
+            print("📡 Stream update: type='${data.type}', message='$displayMessage'");
+            return ProductSuggestionLoading(message: displayMessage);
           }
         },
         onError: (error, stackTrace) {

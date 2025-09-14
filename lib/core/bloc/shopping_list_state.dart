@@ -28,3 +28,25 @@ class ShoppingListError extends ShoppingListState {
   @override
   List<Object> get props => [message];
 }
+
+class ShoppingListItemUpdating extends ShoppingListState {
+  final List<ShoppingListItem> items;
+  final int updatingItemId;
+
+  const ShoppingListItemUpdating({
+    required this.items,
+    required this.updatingItemId,
+  });
+
+  @override
+  List<Object> get props => [items, updatingItemId];
+}
+
+class ShoppingListInserting extends ShoppingListState {
+  final List<ShoppingListItem> items;
+
+  const ShoppingListInserting({required this.items});
+
+  @override
+  List<Object> get props => [items];
+}

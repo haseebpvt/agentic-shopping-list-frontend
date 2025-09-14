@@ -54,8 +54,10 @@ class _MainPageViewState extends State<MainPageView> {
               // Home Screen (Page 0)
               HomeScreen(onPageChange: _goToPage),
               
-              // Camera Screen (Page 1)
-              CameraScreen(cameras: widget.cameras),
+              // Camera Screen (Page 1) - only initialize when visible
+              _currentPage == 1 
+                ? CameraScreen(cameras: widget.cameras)
+                : Container(), // Empty container when not visible
             ],
           ),
           

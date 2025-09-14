@@ -31,7 +31,13 @@ _$ShoppingListItemImpl _$$ShoppingListItemImplFromJson(
   itemName: json['item_name'] as String,
   note: json['note'] as String,
   quantity: json['quantity'] as String,
+  unit: json['unit'] as String,
   id: (json['id'] as num).toInt(),
+  categoryId: (json['category_id'] as num).toInt(),
+  categoryName: json['category_name'] as String,
+  isPurchased: json['is_purchased'] as bool,
+  isAiSuggestion: json['is_ai_suggestion'] as bool,
+  timestamp: (json['timestamp'] as num).toInt(),
 );
 
 Map<String, dynamic> _$$ShoppingListItemImplToJson(
@@ -41,5 +47,11 @@ Map<String, dynamic> _$$ShoppingListItemImplToJson(
   'item_name': instance.itemName,
   'note': instance.note,
   'quantity': instance.quantity,
+  'unit': instance.unit,
   'id': instance.id,
+  'category_id': instance.categoryId,
+  'category_name': instance.categoryName,
+  'is_purchased': instance.isPurchased,
+  'is_ai_suggestion': instance.isAiSuggestion,
+  'timestamp': instance.timestamp,
 };

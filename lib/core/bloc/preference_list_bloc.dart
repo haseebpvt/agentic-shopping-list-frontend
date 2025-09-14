@@ -18,6 +18,8 @@ class PreferenceListBloc extends Bloc<PreferenceListEvent, PreferenceListState> 
     on<RefreshPreferenceList>(_onRefreshPreferenceList);
     on<SearchPreferences>(_onSearchPreferences);
     on<ClearSearch>(_onClearSearch);
+    on<UpdatePreference>(_onUpdatePreference);
+    on<DeletePreference>(_onDeletePreference);
   }
 
   @override
@@ -70,10 +72,10 @@ class PreferenceListBloc extends Bloc<PreferenceListEvent, PreferenceListState> 
     }
   }
 
-  void _onSearchPreferences(
+  Future<void> _onSearchPreferences(
     SearchPreferences event,
     Emitter<PreferenceListState> emit,
-  ) {
+  ) async {
     // Cancel previous timer
     _debounceTimer?.cancel();
     
@@ -86,10 +88,24 @@ class PreferenceListBloc extends Bloc<PreferenceListEvent, PreferenceListState> 
     // Set searching state immediately
     emit(PreferenceListSearching(searchQuery: event.searchQuery));
     
+    // Create a completer to properly handle the async operation
+    final completer = Completer<void>();
+    
     // Set up debounce timer
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      _performSearch(event.userId, event.searchQuery, emit);
+      _performSearch(event.userId, event.searchQuery, emit).then((_) {
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      }).catchError((error) {
+        if (!completer.isCompleted) {
+          completer.completeError(error);
+        }
+      });
     });
+    
+    // Wait for the debounced operation to complete
+    await completer.future;
   }
 
   Future<void> _performSearch(
@@ -123,5 +139,101 @@ class PreferenceListBloc extends Bloc<PreferenceListEvent, PreferenceListState> 
   ) {
     _debounceTimer?.cancel();
     add(LoadPreferenceList(userId: event.userId));
+  }
+
+  Future<void> _onUpdatePreference(
+    UpdatePreference event,
+    Emitter<PreferenceListState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is PreferenceListLoaded) {
+      // Show operation in progress state
+      emit(PreferenceOperationInProgress(
+        items: currentState.items,
+        isSearching: currentState.isSearching,
+        searchQuery: currentState.searchQuery,
+        operationType: "update",
+        itemId: event.itemId,
+      ));
+
+      try {
+        final response = await _apiService.updatePreference(event.itemId, event.text);
+        
+        if (response['success'] == true) {
+          // Show success message briefly
+          emit(PreferenceOperationSuccess(message: 'Preference updated successfully'));
+          
+          // Refresh the list to show updated data
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (currentState.isSearching) {
+            add(SearchPreferences(userId: event.userId, searchQuery: currentState.searchQuery));
+          } else {
+            add(LoadPreferenceList(userId: event.userId));
+          }
+        } else {
+          emit(PreferenceOperationError(
+            message: response['error'] ?? 'Failed to update preference',
+            items: currentState.items,
+            isSearching: currentState.isSearching,
+            searchQuery: currentState.searchQuery,
+          ));
+        }
+      } catch (e) {
+        emit(PreferenceOperationError(
+          message: 'Failed to update preference: ${e.toString()}',
+          items: currentState.items,
+          isSearching: currentState.isSearching,
+          searchQuery: currentState.searchQuery,
+        ));
+      }
+    }
+  }
+
+  Future<void> _onDeletePreference(
+    DeletePreference event,
+    Emitter<PreferenceListState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is PreferenceListLoaded) {
+      // Show operation in progress state
+      emit(PreferenceOperationInProgress(
+        items: currentState.items,
+        isSearching: currentState.isSearching,
+        searchQuery: currentState.searchQuery,
+        operationType: "delete",
+        itemId: event.itemId,
+      ));
+
+      try {
+        final response = await _apiService.deletePreference(event.itemId);
+        
+        if (response['success'] == true) {
+          // Show success message briefly
+          emit(PreferenceOperationSuccess(message: 'Preference deleted successfully'));
+          
+          // Refresh the list to show updated data
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (currentState.isSearching) {
+            add(SearchPreferences(userId: event.userId, searchQuery: currentState.searchQuery));
+          } else {
+            add(LoadPreferenceList(userId: event.userId));
+          }
+        } else {
+          emit(PreferenceOperationError(
+            message: response['error'] ?? 'Failed to delete preference',
+            items: currentState.items,
+            isSearching: currentState.isSearching,
+            searchQuery: currentState.searchQuery,
+          ));
+        }
+      } catch (e) {
+        emit(PreferenceOperationError(
+          message: 'Failed to delete preference: ${e.toString()}',
+          items: currentState.items,
+          isSearching: currentState.isSearching,
+          searchQuery: currentState.searchQuery,
+        ));
+      }
+    }
   }
 }

@@ -5,6 +5,7 @@ import 'package:advanced_shopping_list_frontend/core/models/model/product_sugges
 import 'package:advanced_shopping_list_frontend/core/models/model/quiz_resume/quiz_resume.dart';
 import 'package:advanced_shopping_list_frontend/core/models/model/shopping_list/shopping_list.dart';
 import 'package:advanced_shopping_list_frontend/core/models/model/preference_list/preference_list.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/category/category.dart';
 import 'package:advanced_shopping_list_frontend/core/utils/image_compression.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
@@ -16,7 +17,21 @@ abstract class ApiService {
 
   Future<ShoppingListResponse> getShoppingList(String userId);
 
+  Future<Map<String, dynamic>> markItemPurchased(String userId, int itemId, bool isPurchased);
+
+  Future<Map<String, dynamic>> deleteShoppingListItem(int itemId);
+
   Future<PreferenceListResponse> getPreferenceList(String userId, {String? semanticSearchText});
+
+  Future<Map<String, dynamic>> updatePreference(int itemId, String text);
+
+  Future<Map<String, dynamic>> deletePreference(int itemId);
+
+  Future<Map<String, dynamic>> insertData(String userId, String userText);
+
+  Future<CategoryResponse> getCategories();
+
+  Future<CategoryResponse> identifyCategory(String itemName);
 }
 
 class ApiServiceImpl implements ApiService {
@@ -47,13 +62,13 @@ class ApiServiceImpl implements ApiService {
       "file": await MultipartFile.fromFile(compressedFile.path, filename: fileName),
     });
 
-    print("🌐 Making request to: ${dio.options.baseUrl}/get_product_recommendation");
+    print("🌐 Making request to: ${dio.options.baseUrl}/recommend/get_product_recommendation");
     print("📤 Request data: user_id=$userId, file=$fileName");
 
     final Response response;
     try {
       response = await dio.post(
-        "/get_product_recommendation",
+        "/recommend/get_product_recommendation",
         data: formData,
         options: Options(responseType: ResponseType.stream),
       );
@@ -129,13 +144,26 @@ class ApiServiceImpl implements ApiService {
               print("🔄 Processing JSON: $jsonStr");
               final json = jsonDecode(jsonStr);
               print("🔄 Decoded JSON: $json");
-              final result = ProductSuggestion.fromJson(json);
-              print("✅ Successfully parsed: type=${result.type}, message=${result.message}, threadId=${result.threadId}");
+              
+              // Handle different response formats from the backend
+              final sanitizedJson = <String, dynamic>{
+                'type': json['type']?.toString() ?? '',
+                'message': json['message']?.toString() ?? '',
+                'thread_id': json['thread_id']?.toString(),
+                if (json['quiz'] != null) 'quiz': _castToStringDynamic(json['quiz']),
+                // Handle both direct products array and nested suggestion structure
+                if (json['products'] != null) 'products': _castToStringDynamicList(json['products']),
+                // Handle suggestion field from API (always include since model expects it)
+                'suggestion': json['suggestion'],
+              };
+              
+              final result = ProductSuggestion.fromJson(sanitizedJson);
+              print("✅ Successfully parsed: type='${result.type}', message='${result.message}', threadId=${result.threadId}");
               if (result.quiz != null) {
                 print("✅ Quiz data present: ${result.quiz!.quiz?.length ?? 0} questions");
               }
-              if (result.suggestion != null) {
-                print("✅ Suggestion data present: ${result.suggestion!.products?.length ?? 0} products");
+              if (result.products != null) {
+                print("✅ Products data present: ${result.products!.length} products");
               }
               yield result;
             } catch (parseError) {
@@ -159,8 +187,21 @@ class ApiServiceImpl implements ApiService {
         print("🔄 Processing final buffer: ${buffer.trim()}");
         final json = jsonDecode(buffer.trim());
         print("🔄 Final decoded JSON: $json");
-        final result = ProductSuggestion.fromJson(json);
-        print("✅ Successfully parsed final: type=${result.type}, message=${result.message}, threadId=${result.threadId}");
+        
+        // Handle different response formats from the backend
+        final sanitizedJson = <String, dynamic>{
+          'type': json['type']?.toString() ?? '',
+          'message': json['message']?.toString() ?? '',
+          'thread_id': json['thread_id']?.toString(),
+          if (json['quiz'] != null) 'quiz': _castToStringDynamic(json['quiz']),
+          // Handle both direct products array and nested suggestion structure
+          if (json['products'] != null) 'products': _castToStringDynamicList(json['products']),
+          // Handle suggestion field from API (always include since model expects it)
+          'suggestion': json['suggestion'],
+        };
+        
+        final result = ProductSuggestion.fromJson(sanitizedJson);
+        print("✅ Successfully parsed final: type='${result.type}', message='${result.message}', threadId=${result.threadId}");
         yield result;
       } catch (bufferError) {
         print("❌ Error parsing final buffer: $bufferError");
@@ -185,6 +226,7 @@ class ApiServiceImpl implements ApiService {
     
     // List of possible endpoints to try
     final endpoints = [
+      "/recommend/quiz_resume",
       "/resume_quiz",
       "/quiz_resume", 
       "/submit_quiz_answers"
@@ -231,11 +273,11 @@ class ApiServiceImpl implements ApiService {
         "user_id": userId,
       });
 
-      print("🌐 Making request to: ${dio.options.baseUrl}/get_shopping_list");
+      print("🌐 Making request to: ${dio.options.baseUrl}/shopping_list/get_shopping_list");
       print("📤 Request data: user_id=$userId");
 
       final response = await dio.get(
-        "/get_shopping_list",
+        "/shopping_list/get_shopping_list",
         data: formData,
       );
       
@@ -243,6 +285,69 @@ class ApiServiceImpl implements ApiService {
       return ShoppingListResponse.fromJson(response.data);
     } catch (e) {
       print("❌ Get shopping list failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> markItemPurchased(String userId, int itemId, bool isPurchased) async {
+    print("🔄 Marking item as purchased: userId=$userId, itemId=$itemId, isPurchased=$isPurchased");
+    
+    try {
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "item_id": itemId.toString(),
+        "is_purchased": isPurchased ? "1" : "0",
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/shopping_list/mark_purchased");
+      print("📤 Request data: item_id=${itemId.toString()}, is_purchased=${isPurchased ? "1" : "0"}");
+
+      final response = await dio.post(
+        "/shopping_list/mark_purchased",
+        data: formData,
+      );
+      
+      print("✅ Mark purchased response: ${response.data}");
+      return response.data;
+    } catch (e) {
+      print("❌ Mark item purchased failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> deleteShoppingListItem(int itemId) async {
+    print("🔄 Deleting shopping list item: itemId=$itemId");
+    
+    try {
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "item_id": itemId.toString(),
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/shopping_list/delete");
+      print("📤 Request data: item_id=${itemId.toString()}");
+
+      final response = await dio.delete(
+        "/shopping_list/delete",
+        data: formData,
+      );
+      
+      print("✅ Delete item response: ${response.data}");
+      return response.data;
+    } catch (e) {
+      print("❌ Delete item failed: $e");
       if (e is DioException) {
         print("❌ Error type: ${e.type}");
         print("❌ Error message: ${e.message}");
@@ -272,11 +377,11 @@ class ApiServiceImpl implements ApiService {
       // Note: The preference list API might be on a different server
       // Using the curl example: http://0.0.0.0:8000/get_preference_list
       // We'll use the configured base URL but the endpoint path
-      print("🌐 Making request to: ${dio.options.baseUrl}/get_preference_list");
+      print("🌐 Making request to: ${dio.options.baseUrl}/preference/get_preference_list");
       print("📤 Request data: $formDataMap");
 
       final response = await dio.get(
-        "/get_preference_list",
+        "/preference/get_preference_list",
         data: formData,
       );
       
@@ -290,6 +395,182 @@ class ApiServiceImpl implements ApiService {
         print("❌ Response: ${e.response?.data}");
       }
       rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> updatePreference(int itemId, String text) async {
+    print("🔄 Updating preference: itemId=$itemId, text=$text");
+    
+    try {
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "item_id": itemId,
+        "text": text,
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/preference/update");
+      print("📤 Request data: item_id=$itemId, text=$text");
+
+      final response = await dio.post(
+        "/preference/update",
+        data: formData,
+      );
+      
+      print("✅ Update preference response: ${response.data}");
+      return response.data;
+    } catch (e) {
+      print("❌ Update preference failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> deletePreference(int itemId) async {
+    print("🔄 Deleting preference: itemId=$itemId");
+    
+    try {
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "item_id": itemId,
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/preference/delete");
+      print("📤 Request data: item_id=$itemId");
+
+      final response = await dio.delete(
+        "/preference/delete",
+        data: formData,
+      );
+      
+      print("✅ Delete preference response: ${response.data}");
+      return response.data;
+    } catch (e) {
+      print("❌ Delete preference failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> insertData(String userId, String userText) async {
+    print("🔄 Inserting data: userId=$userId, userText=$userText");
+    
+    try {
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "user_id": userId,
+        "user_text": userText,
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/extractor/insert_data");
+      print("📤 Request data: user_id=$userId, user_text=$userText");
+
+      final response = await dio.post(
+        "/extractor/insert_data",
+        data: formData,
+      );
+      
+      print("✅ Insert data response: ${response.data}");
+      return response.data;
+    } catch (e) {
+      print("❌ Insert data failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CategoryResponse> getCategories() async {
+    try {
+      print("🌐 Making request to: ${dio.options.baseUrl}/category/categories");
+
+      final response = await dio.get("/category/categories");
+      
+      print("✅ Categories response: ${response.data}");
+      return CategoryResponse.fromJson(response.data);
+    } catch (e) {
+      print("❌ Get categories failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<CategoryResponse> identifyCategory(String itemName) async {
+    try {
+      print("🔄 Identifying category for item: $itemName");
+      
+      // Create form data as per the API specification
+      FormData formData = FormData.fromMap({
+        "item_name": itemName,
+      });
+
+      print("🌐 Making request to: ${dio.options.baseUrl}/category/identify");
+      print("📤 Request data: item_name=$itemName");
+
+      final response = await dio.get(
+        "/category/identify",
+        data: formData,
+      );
+      
+      print("✅ Category identification response: ${response.data}");
+      return CategoryResponse.fromJson(response.data);
+    } catch (e) {
+      print("❌ Category identification failed: $e");
+      if (e is DioException) {
+        print("❌ Error type: ${e.type}");
+        print("❌ Error message: ${e.message}");
+        print("❌ Response: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  // Helper method to cast dynamic map to Map<String, dynamic>
+  Map<String, dynamic> _castToStringDynamic(dynamic map) {
+    if (map is Map<String, dynamic>) {
+      return map;
+    } else if (map is Map) {
+      return Map<String, dynamic>.from(map);
+    } else {
+      throw ArgumentError('Cannot cast $map to Map<String, dynamic>');
+    }
+  }
+
+  // Helper method to cast dynamic list to List<Map<String, dynamic>>
+  List<Map<String, dynamic>> _castToStringDynamicList(dynamic list) {
+    if (list is List<Map<String, dynamic>>) {
+      return list;
+    } else if (list is List) {
+      return list.map((item) {
+        if (item is Map<String, dynamic>) {
+          return item;
+        } else if (item is Map) {
+          return Map<String, dynamic>.from(item);
+        } else {
+          throw ArgumentError('Cannot cast list item $item to Map<String, dynamic>');
+        }
+      }).toList();
+    } else {
+      throw ArgumentError('Cannot cast $list to List<Map<String, dynamic>>');
     }
   }
 }

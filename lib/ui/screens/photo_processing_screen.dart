@@ -1,10 +1,14 @@
 import 'dart:io';
 import 'package:advanced_shopping_list_frontend/core/bloc/product_suggestion/product_suggestion.dart';
+import 'package:advanced_shopping_list_frontend/core/models/model/product_suggestion/product_suggestion.dart';
 import 'package:advanced_shopping_list_frontend/core/models/model/quiz_resume/quiz_resume.dart';
 import '../widgets/suggested_product_view.dart';
+import '../widgets/product_details_dialog.dart';
+import '../widgets/ai_gradient_widget.dart';
 import 'package:animated_quiz_widget/quiz_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 
 class PhotoProcessingScreen extends StatefulWidget {
   final String imagePath;
@@ -27,6 +31,12 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
   late Animation<Offset> _statusCardAnimation;
   late Animation<Offset> _quizCardAnimation;
   late Animation<Offset> _resultsCardAnimation;
+  
+  // Cache flag to track if we need to rebuild the background image
+  bool _backgroundImageCacheInvalid = true;
+  
+  // Store quiz data to keep it visible
+  ProductSuggestionQuizRequired? _quizData;
 
   @override
   void initState() {
@@ -89,7 +99,8 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
       body: BlocListener<ProductSuggestionBloc, ProductSuggestionState>(
         listener: (context, state) {
           if (state is ProductSuggestionQuizRequired) {
-            // Animate quiz card when quiz is required
+            // Store quiz data and animate quiz card when quiz is required
+            _quizData = state;
             Future.delayed(const Duration(milliseconds: 300), () {
               if (mounted) {
                 _quizCardController.forward();
@@ -97,6 +108,7 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
             });
           } else if (state is ProductSuggestionSuccess) {
             // Animate results card when results are ready
+            // Keep quiz card visible if it was already shown
             Future.delayed(const Duration(milliseconds: 300), () {
               if (mounted) {
                 _resultsCardController.forward();
@@ -106,51 +118,85 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
         },
         child: Stack(
           children: [
-            // Full screen background image
-            _buildBackgroundImage(),
+            // Header background image
+            _createBackgroundImage(context),
             
-            // Dark overlay for better card visibility
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.2),
-                    Colors.black.withOpacity(0.6),
-                  ],
-                ),
+            // Background color for the rest of the screen
+            Positioned(
+              top: MediaQuery.of(context).size.height * 0.2,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                color: Theme.of(context).scaffoldBackgroundColor,
               ),
             ),
 
-            // Back button
-            _buildBackButton(),
+            // AI Gradient overlay (only during loading)
+            BlocBuilder<ProductSuggestionBloc, ProductSuggestionState>(
+              builder: (context, state) {
+                final isLoading = state is ProductSuggestionLoading || state is QuizSubmissionLoading;
+                return AIGradientWidget(
+                  isVisible: isLoading,
+                  heightPercentage: 0.3, // Cover 30% of screen from bottom with nice fade
+                );
+              },
+            ),
 
             // Progressive card stack from bottom
             _buildProgressiveCards(),
+            
+            // Back button (placed last to be on top of other elements)
+            _buildBackButton(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBackgroundImage() {
-    return Positioned.fill(
-      child: Image.file(
-        File(widget.imagePath),
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: Colors.grey[300],
-            child: const Center(
-              child: Icon(
-                Icons.image_not_supported,
-                size: 64,
-                color: Colors.grey,
-              ),
-            ),
-          );
-        },
+  Widget _createBackgroundImage(BuildContext context) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      height: MediaQuery.of(context).size.height * 0.2, // Header takes 20% of screen height
+      child: RepaintBoundary(
+        child: ShaderMask(
+          shaderCallback: (rect) {
+            return const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.white, // Full opacity at top
+                Colors.white, // Keep full opacity for most of the header
+                Colors.transparent, // Fade to transparent at bottom of header
+              ],
+              stops: [0.0, 0.4, 1.0], // Start fading at 40% of header height for smoother transition
+            ).createShader(rect);
+          },
+          blendMode: BlendMode.dstIn,
+          child: Image.file(
+            File(widget.imagePath),
+            fit: BoxFit.cover,
+            // Add cacheWidth and cacheHeight to optimize memory usage and prevent buffer overflow
+            cacheWidth: 1080, // Reduced from 1920 to further optimize memory
+            cacheHeight: 720, // Reduced from 1080 to further optimize memory
+            filterQuality: FilterQuality.medium, // Balance quality and performance
+            errorBuilder: (context, error, stackTrace) {
+              print('Error loading background image: $error');
+              return Container(
+                color: Colors.grey[100],
+                child: const Center(
+                  child: Icon(
+                    Icons.image_not_supported,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -168,7 +214,7 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
           },
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.6),
+              color: Colors.black.withOpacity(0.3),
               borderRadius: BorderRadius.circular(25),
             ),
             child: const Padding(
@@ -185,42 +231,58 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
     );
   }
 
+
   Widget _buildProgressiveCards() {
     return BlocBuilder<ProductSuggestionBloc, ProductSuggestionState>(
+      buildWhen: (previous, current) {
+        // Only rebuild when the state type changes or when transitioning to/from certain states
+        if (previous.runtimeType != current.runtimeType) return true;
+        if (current is ProductSuggestionLoading && previous is ProductSuggestionLoading) {
+          // For loading states, only rebuild if the message changes significantly
+          // to avoid constant rebuilds during streaming updates
+          return current.message != previous.message;
+        }
+        return true;
+      },
       builder: (context, state) {
-        return Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Status/Progress Card (always visible)
-                SlideTransition(
-                  position: _statusCardAnimation,
-                  child: _buildStatusCard(state),
-                ),
-
-                // Quiz Card (visible when quiz is required)
-                if (state is ProductSuggestionQuizRequired) ...[
-                  const SizedBox(height: 12),
+        return Positioned.fill(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Add spacing to push content below the image header
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.5),
+                  
+                  // Status/Progress Card (always visible)
                   SlideTransition(
-                    position: _quizCardAnimation,
-                    child: _buildQuizCard(state),
+                    position: _statusCardAnimation,
+                    child: _buildStatusCard(state),
                   ),
-                ],
 
-                // Results Card (visible when results are available)
-                if (state is ProductSuggestionSuccess) ...[
-                  const SizedBox(height: 12),
-                  SlideTransition(
-                    position: _resultsCardAnimation,
-                    child: _buildResultsCard(state),
-                  ),
+                  // Quiz Card (visible when quiz data is available)
+                  if (_quizData != null) ...[
+                    const SizedBox(height: 12),
+                    SlideTransition(
+                      position: _quizCardAnimation,
+                      child: _buildQuizCard(state),
+                    ),
+                  ],
+
+                  // Results Card (visible when results are available)
+                  if (state is ProductSuggestionSuccess) ...[
+                    const SizedBox(height: 12),
+                    SlideTransition(
+                      position: _resultsCardAnimation,
+                      child: _buildResultsCard(state),
+                    ),
+                  ],
+                  
+                  // Add bottom padding for better scrolling experience
+                  const SizedBox(height: 100),
                 ],
-              ],
+              ),
             ),
           ),
         );
@@ -256,40 +318,47 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            if (isLoading)
-              const Padding(
-                padding: EdgeInsets.only(right: 16.0),
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Icon(
-                  state is ProductSuggestionError 
-                      ? Icons.error_outline 
-                      : state is ProductSuggestionSuccess
-                          ? Icons.check_circle_outline
-                          : Icons.help_outline,
-                  color: state is ProductSuggestionError 
-                      ? Colors.red 
-                      : state is ProductSuggestionSuccess
-                          ? Colors.green
-                          : Theme.of(context).primaryColor,
-                  size: 24,
-                ),
-              ),
-            Expanded(
-              child: Text(
-                message,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+            // Loading animation or status icon positioned above text
+            RepaintBoundary(
+              child: isLoading
+                  ? Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: SizedBox(
+                        width: 100, // Even bigger size
+                        height: 100, // Even bigger size
+                        child: Lottie.asset(
+                          'assets/ai_loading.json',
+                          repeat: true,
+                          animate: true,
+                        ),
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: Icon(
+                        state is ProductSuggestionError 
+                            ? Icons.error_outline 
+                            : state is ProductSuggestionSuccess
+                                ? Icons.check_circle_outline
+                                : Icons.help_outline,
+                        color: state is ProductSuggestionError 
+                            ? Colors.red 
+                            : state is ProductSuggestionSuccess
+                                ? Colors.green
+                                : Theme.of(context).primaryColor,
+                        size: 48, // Bigger icon size
+                      ),
+                    ),
+            ),
+            // Message text below the animation/icon
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -298,62 +367,85 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
     );
   }
 
-  Widget _buildQuizCard(ProductSuggestionQuizRequired state) {
-    return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.5,
+  Widget _buildQuizCard(ProductSuggestionState state) {
+    // Use stored quiz data if available
+    final quizData = _quizData;
+    if (quizData == null) return Container();
+    
+    // If we're in success state but quiz was completed, show a completed state
+    if (state is ProductSuggestionSuccess) {
+      return Card(
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.quiz_outlined,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "Additional Information",
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.3,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle_outlined,
+                      color: Colors.green,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: QuizWidget(
-                  questions: state.quizQuestions,
-                  onQuizCompleted: (data) {
-                    final questionAndAnswers = data.map((item) {
-                      return "${item.question}: ${item.selectedAnswer}";
-                    }).toList();
-
-                    print("📝 Submitting quiz with ${questionAndAnswers.length} answers");
-                    print("📝 Thread ID: ${state.threadId}");
-                    context.read<ProductSuggestionBloc>().add(
-                          SubmitQuizEvent(
-                            quizRequest: QuizResumeRequest(
-                              threadId: state.threadId,
-                              questionAndAnswers: questionAndAnswers,
-                            ),
-                          ),
-                        );
-                  },
+                    const SizedBox(width: 12),
+                    Text(
+                      "Quiz Completed",
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Text(
+                  "Thank you for providing additional information. Your responses have been processed.",
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
           ),
         ),
+      );
+    }
+    
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.5,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Flexible(
+            child: QuizWidget(
+              questions: quizData.quizQuestions,
+              onQuizCompleted: (data) {
+                final questionAndAnswers = data.map((item) {
+                  return "${item.question}: ${item.selectedAnswer}";
+                }).toList();
+
+                print("📝 Submitting quiz with ${questionAndAnswers.length} answers");
+                print("📝 Thread ID: ${quizData.threadId}");
+                context.read<ProductSuggestionBloc>().add(
+                  SubmitQuizEvent(
+                    quizRequest: QuizResumeRequest(
+                      threadId: quizData.threadId,
+                      questionAndAnswers: questionAndAnswers,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -364,62 +456,46 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.6,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.shopping_cart_outlined,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        "Suggested Products (${state.products.length})",
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      context.read<ProductSuggestionBloc>().add(const ResetEvent());
-                      Navigator.of(context).pop();
-                    },
-                    icon: const Icon(Icons.home_outlined),
-                    tooltip: "Back to Home",
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: state.products.length,
-                  itemBuilder: (context, index) {
-                    final product = state.products[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: SuggestedProductView(product: product),
-                    );
-                  },
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.shopping_cart_outlined,
+                  color: Theme.of(context).primaryColor,
                 ),
+                const SizedBox(width: 12),
+                Text(
+                  "Suggested Products (${state.products.length})",
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Product suggestions as column items (no separate scroll)
+            ...state.products.map((product) => Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: SuggestedProductView(
+                product: product,
+                onTap: () => _showProductDetails(context, product),
               ),
-            ],
-          ),
+            )),
+          ],
         ),
       ),
+    );
+  }
+
+  void _showProductDetails(BuildContext context, Product product) {
+    showDialog(
+      context: context,
+      builder: (context) => ProductDetailsDialog(product: product),
     );
   }
 }
