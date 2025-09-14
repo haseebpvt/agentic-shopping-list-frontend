@@ -76,9 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
     context.read<ShoppingListBloc>().add(LoadShoppingList(userId: _userId));
   }
 
-  void _onCameraButtonPressed() {
-    widget.onPageChange?.call(1);
-  }
 
   Future<void> _onRefresh() async {
     context.read<LocalShoppingListBloc>().add(LoadLocalShoppingList());
@@ -155,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView.builder(
         key: ValueKey(categories.join('_')), // Key changes when categories change order
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100), // Extra bottom padding for FAB
         itemCount: categories.length,
         itemBuilder: (context, categoryIndex) {
           final category = categories[categoryIndex];
@@ -579,6 +576,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
           ),
+          floatingActionButton: !hasSelection 
+              ? FloatingActionButton(
+                  onPressed: () => _showAddItemBottomSheet(),
+                  child: const Icon(Icons.add),
+                )
+              : null,
       body: SafeArea(
         child: Column(
           children: [
@@ -748,6 +751,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onRefresh: _onRefresh,
                         child: SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.only(bottom: 100), // Extra bottom padding for FAB
                           child: SizedBox(
                             height: MediaQuery.of(context).size.height * 0.6,
                             child: Center(
@@ -807,65 +811,49 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-            // Action buttons at bottom
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: hasSelection
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        FloatingActionButton.extended(
-                          onPressed: () async {
-                            // Show confirmation dialog
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Delete Items'),
-                                content: Text(
-                                  'Are you sure you want to delete ${selectedIds.length} item${selectedIds.length > 1 ? 's' : ''}?',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(false),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(true),
-                                    child: const Text('Delete'),
-                                  ),
-                                ],
+            // Action buttons at bottom (only when items are selected)
+            if (hasSelection)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FloatingActionButton.extended(
+                      onPressed: () async {
+                        // Show confirmation dialog
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete Items'),
+                            content: Text(
+                              'Are you sure you want to delete ${selectedIds.length} item${selectedIds.length > 1 ? 's' : ''}?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
                               ),
-                            );
-                            
-                            if (confirmed == true) {
-                              context.read<LocalShoppingListBloc>().add(
-                                DeleteSelectedLocalItems(),
-                              );
-                            }
-                          },
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                          icon: const Icon(Icons.delete),
-                          label: Text('Delete (${selectedIds.length})'),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        FloatingActionButton(
-                          heroTag: "camera_fab",
-                          onPressed: _onCameraButtonPressed,
-                          backgroundColor: Theme.of(context).colorScheme.secondary,
-                          child: const Icon(Icons.camera_alt),
-                        ),
-                        FloatingActionButton(
-                          heroTag: "add_fab",
-                          onPressed: () => _showAddItemBottomSheet(),
-                          child: const Icon(Icons.add),
-                        ),
-                      ],
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(true),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                        
+                        if (confirmed == true) {
+                          context.read<LocalShoppingListBloc>().add(
+                            DeleteSelectedLocalItems(),
+                          );
+                        }
+                      },
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                      icon: const Icon(Icons.delete),
+                      label: Text('Delete (${selectedIds.length})'),
                     ),
-            ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
