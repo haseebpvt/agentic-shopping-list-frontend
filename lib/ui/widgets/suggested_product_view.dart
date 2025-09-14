@@ -62,16 +62,11 @@ class SuggestedProductView extends StatelessWidget {
                 ),
               ),
               // Add to cart button
-              ElevatedButton.icon(
+              IconButton(
+                icon: const Icon(Icons.add_shopping_cart),
                 onPressed: () => _addToCart(context),
-                icon: const Icon(Icons.add_shopping_cart, size: 18),
-                label: const Text("Add"),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
+                color: Theme.of(context).primaryColor,
+                tooltip: 'Add to shopping list',
               ),
             ],
           ),

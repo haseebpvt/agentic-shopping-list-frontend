@@ -456,63 +456,37 @@ class _PhotoProcessingScreenState extends State<PhotoProcessingScreen>
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.6,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.shopping_cart_outlined,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        "Suggested Products (${state.products.length})",
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      context.read<ProductSuggestionBloc>().add(const ResetEvent());
-                      Navigator.of(context).pop();
-                    },
-                    icon: const Icon(Icons.home_outlined),
-                    tooltip: "Back to Home",
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: state.products.length,
-                  itemBuilder: (context, index) {
-                    final product = state.products[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: SuggestedProductView(
-                        product: product,
-                        onTap: () => _showProductDetails(context, product),
-                      ),
-                    );
-                  },
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.shopping_cart_outlined,
+                  color: Theme.of(context).primaryColor,
                 ),
+                const SizedBox(width: 12),
+                Text(
+                  "Suggested Products (${state.products.length})",
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Product suggestions as column items (no separate scroll)
+            ...state.products.map((product) => Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: SuggestedProductView(
+                product: product,
+                onTap: () => _showProductDetails(context, product),
               ),
-            ],
-          ),
+            )),
+          ],
         ),
       ),
     );
