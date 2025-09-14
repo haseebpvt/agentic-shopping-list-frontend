@@ -46,6 +46,9 @@ flutter:
 
   assets:
     - assets/ai_loading.json
+    - assets/mic_inactive.json
+    - assets/mic_active.json
+    - assets/mic_blank.json
     - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see

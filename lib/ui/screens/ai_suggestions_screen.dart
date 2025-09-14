@@ -75,28 +75,6 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
     super.dispose();
   }
 
-  void _showVoiceRecording() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (modalContext) => MultiBlocProvider(
-        providers: [
-          BlocProvider.value(value: context.read<ShoppingListBloc>()),
-          BlocProvider.value(value: context.read<LocalShoppingListBloc>()),
-        ],
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(modalContext).viewInsets.bottom,
-          ),
-          child: VoiceRecordingWidget(
-            userId: widget.userId,
-            onClose: () => Navigator.of(modalContext).pop(),
-          ),
-        ),
-      ),
-    );
-  }
 
   void _showTextInputDialog() {
     showDialog(
@@ -512,23 +490,31 @@ class _AiSuggestionsScreenState extends State<AiSuggestionsScreen> {
                             : Theme.of(context).colorScheme.secondary,
                         child: const Icon(Icons.keyboard),
                       ),
-                      // Mic button (center)
-                      FloatingActionButton(
-                        heroTag: "voice_fab",
-                        onPressed: isInserting ? null : _showVoiceRecording,
-                        backgroundColor: isInserting 
-                            ? Theme.of(context).disabledColor
-                            : Colors.green,
+                      // Mic button (center) - now using inline voice recording
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isInserting 
+                              ? Theme.of(context).disabledColor
+                              : Colors.green,
+                        ),
                         child: isInserting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ? const Center(
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
                                 ),
                               )
-                            : const Icon(Icons.mic),
+                            : InlineVoiceRecordingWidget(
+                                userId: widget.userId,
+                                size: 56,
+                              ),
                       ),
                     ],
                   );
