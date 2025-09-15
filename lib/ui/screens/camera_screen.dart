@@ -75,7 +75,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     
     _controller = CameraController(
       widget.cameras[0],
-      ResolutionPreset.medium, // Use medium resolution to reduce buffer usage
+      ResolutionPreset.high, // Use high resolution for better product name/tagline readability
       enableAudio: false, // Disable audio to reduce resource usage
       imageFormatGroup: ImageFormatGroup.jpeg, // Use JPEG for smaller file sizes
     );

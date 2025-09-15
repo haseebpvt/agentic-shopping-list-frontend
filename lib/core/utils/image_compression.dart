@@ -5,8 +5,8 @@ import 'package:image/image.dart' as img;
 
 class ImageCompression {
   static const int maxFileSizeBytes = 5 * 1024 * 1024; // 5MB
-  static const int maxWidth = 1024;
-  static const int maxHeight = 1024;
+  static const int maxWidth = 1536;  // Increased for better product name/tagline readability
+  static const int maxHeight = 1536; // Increased for better product name/tagline readability
   static const int defaultQuality = 85;
 
   /// Compresses an XFile image to reduce file size for upload
@@ -57,12 +57,12 @@ class ImageCompression {
       );
       print("📸 Compressed size at quality $quality: ${_formatFileSize(compressedBytes.length)}");
       
-      if (compressedBytes.length <= maxFileSizeBytes || quality <= 20) {
+      if (compressedBytes.length <= maxFileSizeBytes || quality <= 60) {
         break;
       }
       
       quality -= 10;
-    } while (quality > 20);
+    } while (quality > 60);
     
     // Create compressed file
     final String compressedPath = imageFile.path.replaceAll('.jpg', '_compressed.jpg');
